@@ -1,4 +1,5 @@
 import api from './axios';
+import axios from 'axios';
 import type { Order, Product, Category, User, DashboardStats } from '../types';
 
 // AUTH
@@ -58,10 +59,16 @@ export const usersApi = {
   delete: (id: number) => api.delete(`/users/${id}`).then((r) => r.data),
 };
 
-// PRINT — via backend (PowerShell ESC/POS)
+// PRINT — apunta al servidor local con PM2 (PowerShell ESC/POS)
+const printAxios = axios.create({
+  baseURL: import.meta.env.VITE_PRINT_URL || 'http://localhost:3001',
+});
+
 export const printApi = {
-  receipt: (id: number) => api.post(`/print/receipt/${id}`).then(r => r.data).catch(() => ({ ok: false })),
-  kitchen: (id: number) => api.post(`/print/kitchen/${id}`).then(r => r.data).catch(() => ({ ok: false })),
+  receipt: (id: number) =>
+    printAxios.post(`/print/receipt/${id}`).then((r) => r.data).catch(() => ({ ok: false })),
+  kitchen: (id: number) =>
+    printAxios.post(`/print/kitchen/${id}`).then((r) => r.data).catch(() => ({ ok: false })),
 };
 
 // REPORTS
