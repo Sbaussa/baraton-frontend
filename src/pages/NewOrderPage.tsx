@@ -95,8 +95,8 @@ export default function NewOrderPage() {
     { value: 'LLEVAR',    label: 'Llevar',    icon: '📦' },
   ];
 
-  // ── Shared cart panel content ──────────────────────────────────────
-  const CartPanel = () => (
+  // ── CartPanel como JSX variable (NO como componente) para evitar remount ──
+  const cartPanel = (
     <>
       {/* Tipo de pedido */}
       <div className="p-4 border-b border-stone-200">
@@ -262,7 +262,7 @@ export default function NewOrderPage() {
           ))}
         </div>
 
-        {/* Grid productos — pb-24 en mobile para que el botón flotante no tape productos */}
+        {/* Grid productos */}
         <div className="flex-1 overflow-y-auto p-3 pb-24 md:pb-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {filteredProducts.map((p) => {
@@ -296,10 +296,10 @@ export default function NewOrderPage() {
 
       {/* ── DESKTOP: Panel derecho fijo ── */}
       <div className="hidden md:flex md:w-80 flex-col bg-stone-50/80">
-        <CartPanel />
+        {cartPanel}
       </div>
 
-      {/* ── MOBILE: Botón flotante "Ver carrito" — solo aparece si hay items ── */}
+      {/* ── MOBILE: Botón flotante ── */}
       {cart.length > 0 && (
         <div className="md:hidden fixed bottom-4 left-0 right-0 flex justify-center z-40 px-4">
           <button
@@ -317,30 +317,17 @@ export default function NewOrderPage() {
       {/* ── MOBILE: Bottom Sheet ── */}
       {cartOpen && (
         <>
-          {/* Overlay oscuro */}
-          <div
-            className="md:hidden fixed inset-0 bg-black/40 z-40"
-            onClick={() => setCartOpen(false)}
-          />
-          {/* Sheet */}
+          <div className="md:hidden fixed inset-0 bg-black/40 z-40" onClick={() => setCartOpen(false)} />
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh]">
-            {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-10 h-1 rounded-full bg-stone-300" />
             </div>
-            {/* Header */}
             <div className="flex items-center justify-between px-4 pb-3 border-b border-stone-200 flex-shrink-0">
               <h2 className="font-bold text-stone-800">Carrito</h2>
-              <button
-                onClick={() => setCartOpen(false)}
-                className="text-stone-400 hover:text-stone-600 text-xl leading-none"
-              >
-                ✕
-              </button>
+              <button onClick={() => setCartOpen(false)} className="text-stone-400 hover:text-stone-600 text-xl leading-none">✕</button>
             </div>
-            {/* Contenido scrollable */}
             <div className="flex flex-col overflow-y-auto flex-1">
-              <CartPanel />
+              {cartPanel}
             </div>
           </div>
         </>
