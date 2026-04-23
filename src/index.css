@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  body {
+    @apply font-sans;
+    background-color: #FDF7F0;
+    color: #1C1917;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #F0EAE0; }
+  ::-webkit-scrollbar-thumb { background: #C8BFB4; border-radius: 99px; }
+}
+
+@layer components {
+  /* ── Botones ── */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-orange-500 hover:bg-orange-400 text-white shadow-md shadow-orange-200;
+  }
+  .btn-secondary {
+    @apply btn bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 shadow-sm;
+  }
+  .btn-danger {
+    @apply btn bg-red-500 hover:bg-red-400 text-white shadow-sm;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-stone-100 text-stone-500 hover:text-stone-800;
+  }
+  .btn-success {
+    @apply btn bg-emerald-500 hover:bg-emerald-400 text-white shadow-sm;
+  }
+
+  /* ── Card ── */
+  .card {
+    background-color: #FFFFFF;
+    border: 1px solid #E7DDD4;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  /* ── Input ── */
+  .input {
+    @apply w-full rounded-lg px-3 py-2 text-sm transition-colors;
+    background-color: #FFFFFF;
+    border: 1px solid #D6CCC3;
+    color: #1C1917;
+    outline: none;
+  }
+  .input::placeholder { color: #A89E95; }
+  .input:focus {
+    border-color: #F97316;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+  }
+
+  /* ── Label ── */
+  .label {
+    @apply block text-xs font-medium mb-1;
+    color: #78716C;
+  }
+
+  /* ── Badges estado ── */
+  .badge-pending   { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#FEF9C3; color:#854D0E; border:1px solid #FDE047; }
+  .badge-preparing { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#DBEAFE; color:#1D4ED8; border:1px solid #93C5FD; }
+  .badge-ready     { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7; }
+  .badge-delivered { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#F3F4F6; color:#6B7280; border:1px solid #D1D5DB; }
+  .badge-cancelled { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5; }
+
+  /* ── Badges tipo pedido ── */
+  .badge-DOMICILIO { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold; background:#FFEDD5; color:#C2410C; border:1px solid #FED7AA; }
+  .badge-MESA      { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#EDE9FE; color:#6D28D9; border:1px solid #C4B5FD; }
+  .badge-LLEVAR    { @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium; background:#E0F2FE; color:#0369A1; border:1px solid #7DD3FC; }
+}
+
+/* ── Animaciones ── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide-in { animation: slideIn 0.18s ease-out forwards; }
+
+@keyframes pulseDom {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.3); }
+  50%       { box-shadow: 0 0 0 8px rgba(249,115,22,0); }
+}
+.pulse-delivery { animation: pulseDom 2s infinite; }
+
+/* ── Overrides zinc oscuro → claro ─────────────────────────────────────────── */
+/* Fondos */
+.bg-zinc-950, .bg-zinc-900 { background-color: #FDF7F0 !important; }
+.bg-zinc-800               { background-color: #F5EDE3 !important; }
+.bg-zinc-700               { background-color: #E8DDD3 !important; }
+
+/* Textos */
+.text-zinc-100             { color: #1C1917 !important; }
+.text-zinc-200             { color: #292524 !important; }
+.text-zinc-300             { color: #44403C !important; }
+.text-zinc-400             { color: #78716C !important; }
+.text-zinc-500             { color: #A8A29E !important; }
+.text-zinc-600             { color: #C4BCB6 !important; }
+.text-zinc-700             { color: #D6D0CA !important; }
+
+/* Bordes */
+.border-zinc-800           { border-color: #E7DDD4 !important; }
+.border-zinc-700           { border-color: #D6CCC3 !important; }
+
+/* Divisores */
+.divide-zinc-800 > * + *   { border-color: #E7DDD4 !important; }
+.divide-zinc-800\/50 > * + * { border-color: rgba(231,221,212,0.5) !important; }
+
+/* Hover */
+.hover\:bg-zinc-800:hover  { background-color: #F0E8DE !important; }
+.hover\:bg-zinc-700:hover  { background-color: #E8DDD3 !important; }
+
+/* Opacidades/transparencias comunes */
+.bg-zinc-800\/50           { background-color: rgba(245,237,227,0.7) !important; }
+.bg-zinc-800\/40           { background-color: rgba(245,237,227,0.6) !important; }
+.bg-zinc-800\/30           { background-color: rgba(245,237,227,0.4) !important; }
+.bg-zinc-900\/50           { background-color: rgba(253,247,240,0.8) !important; }
+.bg-zinc-900\/90           { background-color: rgba(255,255,255,0.95) !important; }
+.bg-zinc-950\/90           { background-color: rgba(253,247,240,0.97) !important; }
+
+/* Backdrop */
+.backdrop-blur             { backdrop-filter: blur(8px); }
+
+/* ── Mejoras móvil ── */
+button, a { -webkit-tap-highlight-color: transparent; }
+input, select, textarea { font-size: 16px; } /* evita zoom en iOS */
+* { -webkit-overflow-scrolling: touch; }
+.overflow-x-auto::-webkit-scrollbar { display: none; }
+.overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
