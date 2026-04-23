@@ -21,6 +21,7 @@ export default function NewOrderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     productsApi.getAvailable().then((prods) => {
@@ -62,9 +63,11 @@ export default function NewOrderPage() {
   const total = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
 
-  const filteredProducts = activeCategory
-    ? products.filter((p) => p.categoryId === activeCategory)
-    : products;
+  const filteredProducts = products.filter((p) => {
+    const matchCat = activeCategory === null || p.categoryId === activeCategory;
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
   const submit = async () => {
     if (!cart.length) { setError('Agrega al menos un producto'); return; }
@@ -216,6 +219,28 @@ export default function NewOrderPage() {
       <div className="flex-1 flex flex-col overflow-hidden border-b md:border-b-0 md:border-r border-stone-200">
         <div className="p-3 md:p-4 border-b border-stone-200">
           <h1 className="font-bold text-stone-800 text-sm md:text-base">Nuevo Pedido</h1>
+        </div>
+
+        {/* Barra de búsqueda */}
+        <div className="px-3 pt-3 pb-2 border-b border-stone-200 flex-shrink-0">
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm pointer-events-none">🔍</span>
+            <input
+              type="text"
+              className="w-full bg-stone-100 border border-stone-200 rounded-xl pl-8 pr-8 py-2 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:border-orange-400 transition-colors"
+              placeholder="Buscar producto..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-sm leading-none"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Categorías */}
