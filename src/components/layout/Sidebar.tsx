@@ -50,12 +50,15 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
 
   return (
     <aside
-      className={`flex flex-col h-screen transition-all duration-200 border-r ${collapsed ? 'w-16' : 'w-56'}`}
+      className={`flex flex-col transition-all duration-200 border-r ${collapsed ? 'w-16' : 'w-56'}
+        h-screen md:h-screen
+        max-h-screen
+      `}
       style={{ backgroundColor: '#FFFFFF', borderColor: '#E7DDD4' }}
     >
       {/* Header */}
       <div
-        className={`flex items-center gap-3 p-4 border-b ${collapsed ? 'justify-center' : ''}`}
+        className={`flex items-center gap-3 p-4 border-b flex-shrink-0 ${collapsed ? 'justify-center' : ''}`}
         style={{ borderColor: '#E7DDD4' }}
       >
         <UtensilsCrossed className="text-orange-500 flex-shrink-0" size={22} />
@@ -66,7 +69,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           </div>
         )}
 
-        {/* Botón colapsar en desktop */}
+        {/* Colapsar en desktop */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="flex-shrink-0 transition-colors hidden md:flex items-center justify-center rounded hover:bg-stone-100 p-0.5"
@@ -75,7 +78,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
 
-        {/* Botón cerrar en móvil */}
+        {/* Cerrar en móvil */}
         {onClose && (
           <button onClick={onClose} className="flex-shrink-0 text-stone-400 hover:text-stone-700 md:hidden">
             <X size={20} />
@@ -83,8 +86,8 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+      {/* Nav — scrollable, ocupa el espacio disponible entre header y footer */}
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0">
         {visible.map((item) => {
           const Icon = item.icon;
           return (
@@ -109,9 +112,9 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — siempre visible en la parte inferior */}
       <div
-        className={`p-3 border-t ${collapsed ? 'flex justify-center' : ''}`}
+        className={`p-3 border-t flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}
         style={{ borderColor: '#E7DDD4' }}
       >
         {!collapsed && (
