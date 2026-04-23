@@ -37,8 +37,8 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 shadow-md" style={{ background: '#FFEDD5', border: '2px solid #FED7AA' }}>
             <span className="text-4xl">🍛</span>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800">El Baraton</h1>
-          <p className="text-orange-500 font-semibold text-sm mt-1">Almuerzos Económicos</p>
+          <h1 className="text-2xl font-bold text-stone-800">El Nuevo Baratón</h1>
+          <p className="text-orange-500 font-semibold text-sm mt-1">Panel de gestión del restaurante</p>
         </div>
 
         {/* Formulario */}
@@ -69,7 +69,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs mt-4" style={{ color: '#C8BFB4' }}>
-          Sistema POS · El Baraton Almuerzos
+          © 2026 Baussas — Todos los derechos reservados.
         </p>
       </div>
     </div>
