@@ -1,5 +1,4 @@
 import api from './axios';
-import axios from 'axios';
 import type { Order, Product, Category, User, DashboardStats } from '../types';
 
 // AUTH
@@ -59,16 +58,32 @@ export const usersApi = {
   delete: (id: number) => api.delete(`/users/${id}`).then((r) => r.data),
 };
 
-// PRINT — apunta al servidor local con PM2 (PowerShell ESC/POS)
-const printAxios = axios.create({
-  baseURL: import.meta.env.VITE_PRINT_URL || 'http://localhost:3001',
-});
+// PRINT — agente local via ngrok
+const PRINT_AGENT = import.meta.env.VITE_PRINT_AGENT_URL || 'http://localhost:4001';
 
 export const printApi = {
-  receipt: (id: number) =>
-    printAxios.post(`/print/receipt/${id}`).then((r) => r.data).catch(() => ({ ok: false })),
-  kitchen: (id: number) =>
-    printAxios.post(`/print/kitchen/${id}`).then((r) => r.data).catch(() => ({ ok: false })),
+  receipt: async (orderId: number) => {
+    try {
+      const order = await ordersApi.getOne(orderId);
+      const r = await fetch(`${PRINT_AGENT}/print/receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+        body: JSON.stringify({ order }),
+      });
+      return r.ok ? { ok: true } : { ok: false };
+    } catch (err) { console.error('Print error:', err); return { ok: false }; }
+  },
+  kitchen: async (orderId: number) => {
+    try {
+      const order = await ordersApi.getOne(orderId);
+      const r = await fetch(`${PRINT_AGENT}/print/kitchen`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+        body: JSON.stringify({ order }),
+      });
+      return r.ok ? { ok: true } : { ok: false };
+    } catch (err) { console.error('Print error:', err); return { ok: false }; }
+  },
 };
 
 // REPORTS
