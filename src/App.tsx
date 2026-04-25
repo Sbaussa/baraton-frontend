@@ -14,7 +14,6 @@ import CategoriesPage from './pages/CategoriesPage';
 import UsersPage from './pages/UsersPage';
 import MenuDiaPage from './pages/MenuDiaPage';
 import MesasPage from './pages/MesasPage';
-import PrintSettingsPage from './pages/PrintSettingsPage';
 import PublicOrderPage from './pages/PublicOrderPage';
 import OrderStatusPage from './pages/OrderStatusPage';
 
@@ -49,7 +48,6 @@ export default function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="menu" element={<MenuDiaPage />} />
           <Route path="mesas" element={<MesasPage />} />
-          <Route path="print-settings" element={<PrintSettingsPage />} />
         </Route>
         <Route path="pedido" element={<PublicOrderPage />} />
         <Route path="seguimiento/:token" element={<OrderStatusPage />} />

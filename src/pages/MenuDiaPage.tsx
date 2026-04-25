@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { productsApi } from '../api';
 import api from '../api/axios';
 import type { Product, Category } from '../types';
+import {
+  Settings, Phone, Save, Check, Copy, CheckCheck,
+  Plus, X, ChefHat, Utensils, Soup, Wheat, Coffee,
+  Cake, Sparkles, AlertTriangle,
+  ToggleLeft, ToggleRight, Salad, PlusCircle, Smartphone,
+} from 'lucide-react';
 
 interface SpecialItem {
   name: string;
@@ -11,30 +17,44 @@ interface SpecialItem {
 
 const EMOJIS = ['🍗','🥩','🐟','🥗','🍛','🍲','🥘','🫕','🍝','🥪','🫔','🍖','🐄','🐷','🐔','🦈','🌽','🥔','🫘','🥦','🎉','⭐'];
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-  'Sopas': '🍜',
-  'Proteínas': '🥩',
-  'Principios': '🌽',
-  'Bebidas': '🍹',
-  'Postres': '🍰',
-  'Extras': '✅',
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  'Sopas':      <Soup size={13} />,
+  'Proteínas':  <ChefHat size={13} />,
+  'Principios': <Wheat size={13} />,
+  'Bebidas':    <Coffee size={13} />,
+  'Postres':    <Cake size={13} />,
+  'Extras':     <Check size={13} />,
 };
 
 const CAT_ORDER = ['Proteínas', 'Sopas', 'Principios', 'Bebidas', 'Postres', 'Extras'];
 
+const inputCls = "w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all";
+
+function SectionTitle({ icon, children, action }: { icon: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <span className="text-orange-500">{icon}</span>
+        <h2 className="text-sm font-bold text-stone-700">{children}</h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export default function MenuDiaPage() {
-  const [products, setProducts]       = useState<Product[]>([]);
-  const [categories, setCategories]   = useState<Category[]>([]);
-  const [availability, setAvailability] = useState<Record<number, boolean>>({});
-  const [specials, setSpecials]        = useState<SpecialItem[]>([{ name: '', price: '', emoji: '🎉' }]);
+  const [products, setProducts]           = useState<Product[]>([]);
+  const [categories, setCategories]       = useState<Category[]>([]);
+  const [availability, setAvailability]   = useState<Record<number, boolean>>({});
+  const [specials, setSpecials]           = useState<SpecialItem[]>([{ name: '', price: '', emoji: '🎉' }]);
   const [precioAlmuerzo, setPrecioAlmuerzo] = useState('15000');
-  const [extras, setExtras]            = useState('Arroz blando · Ensalada verde · Frijol · Tajadas');
-  const [adicionales, setAdicionales]  = useState('Porción de ensalada  $3.000\nPorción de arroz  $3.000\nPorción de patacón $4.000\nPorción de tajadas  $3.000\nPorción de papas  $7.000');
-  const [phones, setPhones]            = useState('3122035078.     3016771709.      6053049760');
-  const [generatedMsg, setGeneratedMsg] = useState('');
-  const [saved, setSaved]              = useState(false);
-  const [saving, setSaving]            = useState(false);
-  const [copied, setCopied]            = useState(false);
+  const [extras, setExtras]               = useState('Arroz blando · Ensalada verde · Frijol · Tajadas');
+  const [adicionales, setAdicionales]     = useState('Porción de ensalada  $3.000\nPorción de arroz  $3.000\nPorción de patacón $4.000\nPorción de tajadas  $3.000\nPorción de papas  $7.000');
+  const [phones, setPhones]               = useState('3122035078.     3016771709.      6053049760');
+  const [generatedMsg, setGeneratedMsg]   = useState('');
+  const [saved, setSaved]                 = useState(false);
+  const [saving, setSaving]               = useState(false);
+  const [copied, setCopied]               = useState(false);
 
   useEffect(() => {
     productsApi.getAll().then((prods) => {
@@ -84,24 +104,23 @@ export default function MenuDiaPage() {
     setSaving(false); setSaved(true);
   };
 
-  // Detecta emoji por nombre del producto
   const getProductEmoji = (name: string): string => {
     const n = name.toLowerCase();
-    if (/pollo|pechuga|gallina|pato|codorniz/.test(n))       return '🐔';
+    if (/pollo|pechuga|gallina|pato|codorniz/.test(n))            return '🐔';
     if (/carne|bistec|bisteck|res|lomo|falda|sobrebarriga/.test(n)) return '🥩';
     if (/cerdo|chuleta|costilla|chicharr|lech[ón]|pernil/.test(n)) return '🐷';
     if (/pescado|tilapia|bagre|mojarra|atun|salmon|trucha/.test(n)) return '🐟';
-    if (/camaron|mariscos|langosta/.test(n))                 return '🦐';
-    if (/higado|mondongo|tripas|intestino/.test(n))          return '🍖';
-    if (/desmechad|mechad/.test(n))                          return '🥩';
-    if (/sancocho|sopa|caldo|crema/.test(n))                 return '🍜';
-    if (/fajita|mixta/.test(n))                              return '🌮';
-    if (/arroz/.test(n))                                     return '🍚';
-    if (/ensalada|verdura/.test(n))                          return '🥗';
-    if (/frijol|lenteja|garbanzo/.test(n))                   return '🌿';
-    if (/papa|patacon|yuca|platano|tajada/.test(n))          return '🌽';
-    if (/jugo|limonada|agua|gaseosa|bebida/.test(n))         return '🥤';
-    if (/postre|arroz con leche|dulce|flan/.test(n))         return '🍮';
+    if (/camaron|mariscos|langosta/.test(n))                       return '🦐';
+    if (/higado|mondongo|tripas|intestino/.test(n))                return '🍖';
+    if (/desmechad|mechad/.test(n))                               return '🥩';
+    if (/sancocho|sopa|caldo|crema/.test(n))                      return '🍜';
+    if (/fajita|mixta/.test(n))                                   return '🌮';
+    if (/arroz/.test(n))                                          return '🍚';
+    if (/ensalada|verdura/.test(n))                               return '🥗';
+    if (/frijol|lenteja|garbanzo/.test(n))                        return '🌿';
+    if (/papa|patacon|yuca|platano|tajada/.test(n))               return '🌽';
+    if (/jugo|limonada|agua|gaseosa|bebida/.test(n))              return '🥤';
+    if (/postre|arroz con leche|dulce|flan/.test(n))              return '🍮';
     return '🍽';
   };
 
@@ -116,85 +135,51 @@ export default function MenuDiaPage() {
       byCategory[p.category.name].push(p);
     });
 
-    const sortedEntries = Object.entries(byCategory).sort(([a], [b]) => {
-      return (CAT_ORDER.indexOf(a) === -1 ? 99 : CAT_ORDER.indexOf(a)) -
-             (CAT_ORDER.indexOf(b) === -1 ? 99 : CAT_ORDER.indexOf(b));
-    });
+    const sortedEntries = Object.entries(byCategory).sort(([a], [b]) =>
+      (CAT_ORDER.indexOf(a) === -1 ? 99 : CAT_ORDER.indexOf(a)) -
+      (CAT_ORDER.indexOf(b) === -1 ? 99 : CAT_ORDER.indexOf(b))
+    );
 
     const sep  = '*================================*';
     const sep2 = '- - - - - - - - - - - - - - - - -';
 
     let msg = '';
-
-    // ── Encabezado ──────────────────────────────────
-    msg += `${sep}\n`;
-    msg += `*🍛 RESTAURANTE Y COMIDAS RAPIDAS*\n`;
-    msg += `*EL NUEVO BARATON*\n`;
-    msg += `*DOMICILIO Y PAGO CONTRAENTREGA* 🛵\n`;
-    msg += `${sep}\n`;
+    msg += `${sep}\n*🍛 RESTAURANTE Y COMIDAS RAPIDAS*\n*EL NUEVO BARATON*\n*DOMICILIO Y PAGO CONTRAENTREGA* 🛵\n${sep}\n`;
     msg += `📞 *TELEFONOS:*\n`;
-    phones.split(/[·,]/).map(p => p.trim()).filter(Boolean).forEach(p => {
-      msg += `    ${p}\n`;
-    });
-    msg += `${sep}\n\n`;
+    phones.split(/[·,]/).map(p => p.trim()).filter(Boolean).forEach(p => { msg += `    ${p}\n`; });
+    msg += `${sep}\n\n👋 *Hola! Para hoy tenemos disponible*\n💰 *ALMUERZO DEL DIA: $${precio}*\n\n`;
 
-    // ── Saludo ───────────────────────────────────────
-    msg += `👋 *Hola! Para hoy tenemos disponible*\n`;
-    msg += `💰 *ALMUERZO DEL DIA: $${precio}*\n\n`;
-
-    // ── Menú por categoría ───────────────────────────
     sortedEntries.forEach(([catName, prods]) => {
-      // Sopas
       if (catName === 'Sopas') {
-        msg += `${sep2}\n`;
-        msg += `🍜 *SOPAS*\n`;
+        msg += `${sep2}\n🍜 *SOPAS*\n`;
         prods.forEach((p) => {
           const pr = p.price !== Number(precioAlmuerzo) ? ` *(+$${p.price.toLocaleString('es-CO')})*` : '';
           msg += `  • ${p.name}${pr}\n`;
         });
         msg += `\n`;
-      }
-      // Proteínas
-      else if (catName === 'Proteínas') {
-        // Separar precio igual al almuerzo vs precio diferente
+      } else if (catName === 'Proteínas') {
         const normalPrice  = prods.filter(p => p.price === Number(precioAlmuerzo));
         const specialPrice = prods.filter(p => p.price !== Number(precioAlmuerzo));
-
         if (normalPrice.length) {
-          msg += `${sep2}\n`;
-          msg += `🍽 *PROTEINAS - $${precio}*\n`;
-          normalPrice.forEach((p) => {
-            msg += `${getProductEmoji(p.name)} ${p.name}\n`;
-          });
+          msg += `${sep2}\n🍽 *PROTEINAS - $${precio}*\n`;
+          normalPrice.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
           msg += `\n`;
         }
         if (specialPrice.length) {
           const prices = [...new Set(specialPrice.map(p => p.price))].sort();
           prices.forEach(price => {
             const group = specialPrice.filter(p => p.price === price);
-            msg += `${sep2}\n`;
-            msg += `✨ *ESPECIALES - $${price.toLocaleString('es-CO')}*\n`;
-            group.forEach((p) => {
-              msg += `${getProductEmoji(p.name)} ${p.name}\n`;
-            });
+            msg += `${sep2}\n✨ *ESPECIALES - $${price.toLocaleString('es-CO')}*\n`;
+            group.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
             msg += `\n`;
           });
         }
-      }
-      // Principios (no se listan aparte, van en acompañamientos)
-      // Bebidas
-      else if (catName === 'Bebidas') {
-        msg += `${sep2}\n`;
-        msg += `🥤 *BEBIDAS*\n`;
-        prods.forEach((p) => {
-          msg += `  • ${p.name}  $${p.price.toLocaleString('es-CO')}\n`;
-        });
+      } else if (catName === 'Bebidas') {
+        msg += `${sep2}\n🥤 *BEBIDAS*\n`;
+        prods.forEach((p) => { msg += `  • ${p.name}  $${p.price.toLocaleString('es-CO')}\n`; });
         msg += `\n`;
-      }
-      // Otras categorías
-      else if (!['Principios'].includes(catName)) {
-        msg += `${sep2}\n`;
-        msg += `🍽 *${catName.toUpperCase()}*\n`;
+      } else if (!['Principios'].includes(catName)) {
+        msg += `${sep2}\n🍽 *${catName.toUpperCase()}*\n`;
         prods.forEach((p) => {
           const pr = p.price !== Number(precioAlmuerzo) ? `  $${p.price.toLocaleString('es-CO')}` : '';
           msg += `${getProductEmoji(p.name)} ${p.name}${pr}\n`;
@@ -203,10 +188,8 @@ export default function MenuDiaPage() {
       }
     });
 
-    // ── Especiales del día ───────────────────────────
     if (validSpecials.length) {
-      msg += `${sep2}\n`;
-      msg += `🎉 *ESPECIAL DEL DIA* 🎉\n`;
+      msg += `${sep2}\n🎉 *ESPECIAL DEL DIA* 🎉\n`;
       validSpecials.forEach((s) => {
         const pr = s.price ? `  *$${Number(s.price).toLocaleString('es-CO')}*` : '';
         msg += `${s.emoji} ${s.name}${pr}\n`;
@@ -214,127 +197,165 @@ export default function MenuDiaPage() {
       msg += `\n`;
     }
 
-    // ── Acompañamientos ──────────────────────────────
     if (extras.trim()) {
-      msg += `${sep2}\n`;
-      msg += `🥗 *ACOMPAÑAMIENTOS*\n`;
-      extras.split('·').map(e => e.trim()).filter(Boolean).forEach(e => {
-        msg += `  • ${e}\n`;
-      });
+      msg += `${sep2}\n🥗 *ACOMPAÑAMIENTOS*\n`;
+      extras.split('·').map(e => e.trim()).filter(Boolean).forEach(e => { msg += `  • ${e}\n`; });
       msg += `\n`;
     }
 
-    // ── Adicionales ──────────────────────────────────
     if (adicionales.trim()) {
-      msg += `${sep2}\n`;
-      msg += `➕ *En Adicionales*\n`;
+      msg += `${sep2}\n➕ *En Adicionales*\n`;
       adicionales.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
-        // Detectar si tiene precio para ponerlo en negrita
         const formatted = line.replace(/\$[\d.,]+/, (m) => `*${m}*`);
         msg += `     • ${formatted}\n`;
       });
       msg += `\n`;
     }
 
-    // ── Cierre ───────────────────────────────────────
-    msg += `${sep}\n`;
-    msg += `🛵 *Servicio a domicilio disponible*\n`;
-    msg += `💳 Pago contraentrega\n`;
-    msg += `${sep}`;
-
+    msg += `${sep}\n🛵 *Servicio a domicilio disponible*\n💳 Pago contraentrega\n${sep}`;
     setGeneratedMsg(msg);
   };
 
   const copyMessage = async () => {
     await navigator.clipboard.writeText(generatedMsg);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const activeCount = Object.values(availability).filter(Boolean).length;
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl">
+    <div className="p-4 md:p-6 space-y-5 max-w-6xl">
 
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-stone-800">📅 Menú del Día</h1>
+          <h1 className="text-xl font-bold text-stone-800 tracking-tight">Menú del Día</h1>
           <p className="text-sm text-stone-400 mt-0.5">
-            Selecciona los platos de hoy · guarda · genera el mensaje para WhatsApp
+            Activa los platos · guarda · genera el mensaje para WhatsApp
           </p>
         </div>
-        <button className="btn-secondary" onClick={saveAvailability} disabled={saving}>
-          {saving ? '⏳ Guardando...' : saved ? '✅ Guardado' : '💾 Guardar disponibilidad'}
+        <button
+          onClick={saveAvailability}
+          disabled={saving}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+            saved
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+              : 'bg-white border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-stone-50'
+          }`}
+        >
+          {saving ? (
+            <div className="w-4 h-4 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
+          ) : saved ? (
+            <CheckCheck size={16} />
+          ) : (
+            <Save size={16} />
+          )}
+          {saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar disponibilidad'}
         </button>
       </div>
 
       {saved && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-sm px-4 py-2.5 rounded-lg">
-          ✅ Listo — <strong>Nuevo Pedido</strong> ya muestra solo los platos activos de hoy.
+        <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-2.5 rounded-xl">
+          <Check size={15} className="flex-shrink-0" />
+          <span><strong>Nuevo Pedido</strong> ya muestra solo los platos activos de hoy.</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* ── Columna izquierda ── */}
         <div className="space-y-4">
 
-          {/* Config precio / teléfonos */}
-          <div className="card p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-orange-600">⚙️ Configuración</h2>
+          {/* Configuración */}
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
+            <SectionTitle icon={<Settings size={15} />}>Configuración</SectionTitle>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Precio almuerzo ($)</label>
-                <input className="input" type="number" value={precioAlmuerzo}
-                  onChange={(e) => { setPrecioAlmuerzo(e.target.value); resetMsg(); }} />
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-stone-500">Precio almuerzo</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
+                  <input className={inputCls + ' pl-6'} type="number" value={precioAlmuerzo}
+                    onChange={(e) => { setPrecioAlmuerzo(e.target.value); resetMsg(); }} />
+                </div>
               </div>
-              <div>
-                <label className="label">Teléfonos</label>
-                <input className="input" value={phones}
-                  onChange={(e) => { setPhones(e.target.value); resetMsg(); }} />
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-stone-500">Teléfonos</label>
+                <div className="relative">
+                  <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                  <input className={inputCls + ' pl-8 text-xs'} value={phones}
+                    onChange={(e) => { setPhones(e.target.value); resetMsg(); }} />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Lista de productos */}
-          <div className="card overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200">
-              <h2 className="text-sm font-semibold text-stone-800">
-                Platos del día
-                <span className="ml-2 text-xs text-orange-600 font-normal">{activeCount} activos</span>
-              </h2>
-              <div className="flex gap-3">
-                <button className="text-xs text-emerald-600 hover:text-emerald-300" onClick={() => selectGlobal(true)}>Todo ✓</button>
-                <button className="text-xs text-red-400 hover:text-red-300" onClick={() => selectGlobal(false)}>Ninguno ✗</button>
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
+              <div className="flex items-center gap-2">
+                <Utensils size={14} className="text-orange-500" />
+                <h2 className="text-sm font-bold text-stone-700">Platos del día</h2>
+                <span className="text-xs bg-orange-100 text-orange-600 font-semibold px-2 py-0.5 rounded-full">
+                  {activeCount} activos
+                </span>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => selectGlobal(true)}
+                  className="flex items-center gap-1 text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded-lg transition-colors font-medium"
+                >
+                  <ToggleRight size={13} /> Todos
+                </button>
+                <button
+                  onClick={() => selectGlobal(false)}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
+                >
+                  <ToggleLeft size={13} /> Ninguno
+                </button>
               </div>
             </div>
 
-            <div className="divide-y divide-stone-200">
+            <div className="divide-y divide-stone-50">
               {categories.map((cat) => {
                 const catProds = products.filter((p) => p.categoryId === cat.id);
+                const activeInCat = catProds.filter(p => availability[p.id]).length;
                 return (
                   <div key={cat.id}>
-                    <div className="flex items-center justify-between px-4 py-2 bg-stone-100/50">
-                      <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">
-                        {CATEGORY_EMOJIS[cat.name] || '🍽'} {cat.name}
-                      </span>
-                      <div className="flex gap-3">
-                        <button className="text-xs text-emerald-600 hover:text-emerald-300"
-                          onClick={() => selectAll(cat.id, true)}>Todo ✓</button>
-                        <button className="text-xs text-red-400 hover:text-red-300"
-                          onClick={() => selectAll(cat.id, false)}>Ninguno ✗</button>
+                    <div className="flex items-center justify-between px-4 py-2 bg-stone-50/80">
+                      <div className="flex items-center gap-2">
+                        <span className="text-stone-400">{CATEGORY_ICONS[cat.name] || <Utensils size={13} />}</span>
+                        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{cat.name}</span>
+                        <span className="text-xs text-stone-400">{activeInCat}/{catProds.length}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => selectAll(cat.id, true)}
+                          className="text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-lg transition-colors font-medium">
+                          Todos
+                        </button>
+                        <button onClick={() => selectAll(cat.id, false)}
+                          className="text-xs text-red-400 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors font-medium">
+                          Ninguno
+                        </button>
                       </div>
                     </div>
-                    <div className="divide-y divide-stone-200/40">
+                    <div>
                       {catProds.map((p) => (
                         <label key={p.id}
-                          className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-stone-100/40 ${!availability[p.id] ? 'opacity-35' : ''}`}>
-                          <input type="checkbox" className="accent-orange-500 w-4 h-4 flex-shrink-0"
+                          className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-stone-50 border-b border-stone-50/80 last:border-0 ${
+                            !availability[p.id] ? 'opacity-40' : ''
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="accent-orange-500 w-4 h-4 flex-shrink-0 rounded"
                             checked={!!availability[p.id]}
-                            onChange={() => toggleProduct(p.id)} />
+                            onChange={() => toggleProduct(p.id)}
+                          />
                           <span className="flex-1 text-sm text-stone-700">{p.name}</span>
-                          <span className="text-xs font-semibold text-orange-600">${p.price.toLocaleString('es-CO')}</span>
+                          <span className="text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-lg">
+                            ${p.price.toLocaleString('es-CO')}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -344,72 +365,112 @@ export default function MenuDiaPage() {
             </div>
           </div>
 
-          {/* Especiales */}
-          <div className="card p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-stone-800">🎉 Especiales del día</h2>
-              <button className="text-xs text-orange-600 hover:text-orange-500" onClick={addSpecial}>+ Agregar</button>
+          {/* Especiales del día */}
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
+            <SectionTitle
+              icon={<Sparkles size={15} />}
+              action={
+                <button
+                  onClick={addSpecial}
+                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-500 font-semibold transition-colors"
+                >
+                  <PlusCircle size={13} /> Agregar
+                </button>
+              }
+            >
+              Especiales del día
+            </SectionTitle>
+            <div className="space-y-2">
+              {specials.map((s, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <select
+                    className="bg-stone-50 border border-stone-200 rounded-xl w-12 text-base px-1 py-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    value={s.emoji}
+                    onChange={(e) => updateSpecial(i, 'emoji', e.target.value)}
+                  >
+                    {EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                  </select>
+                  <input className={inputCls + ' flex-1'} placeholder="Nombre del especial" value={s.name}
+                    onChange={(e) => updateSpecial(i, 'name', e.target.value)} />
+                  <div className="relative w-28 flex-shrink-0">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
+                    <input className={inputCls + ' pl-6'} placeholder="Precio" value={s.price}
+                      onChange={(e) => updateSpecial(i, 'price', e.target.value)} />
+                  </div>
+                  <button
+                    onClick={() => removeSpecial(i)}
+                    className="text-stone-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ))}
             </div>
-            {specials.map((s, i) => (
-              <div key={i} className="flex gap-2 items-center">
-                <select className="input w-14 text-base px-1 flex-shrink-0" value={s.emoji}
-                  onChange={(e) => updateSpecial(i, 'emoji', e.target.value)}>
-                  {EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
-                </select>
-                <input className="input flex-1" placeholder="Nombre del especial" value={s.name}
-                  onChange={(e) => updateSpecial(i, 'name', e.target.value)} />
-                <input className="input w-28" placeholder="Precio" value={s.price}
-                  onChange={(e) => updateSpecial(i, 'price', e.target.value)} />
-                <button className="text-red-500 hover:text-red-400 text-xl px-1 flex-shrink-0"
-                  onClick={() => removeSpecial(i)}>×</button>
-              </div>
-            ))}
           </div>
 
-          {/* Acompañamientos / adicionales */}
-          <div className="card p-4 space-y-3">
-            <div>
-              <label className="label">🥗 Acompañamientos (separar con ·)</label>
-              <input className="input" value={extras}
+          {/* Acompañamientos y adicionales */}
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 space-y-3">
+            <SectionTitle icon={<Salad size={15} />}>Acompañamientos y adicionales</SectionTitle>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-stone-500">Acompañamientos <span className="text-stone-400 font-normal">(separar con ·)</span></label>
+              <input className={inputCls} value={extras}
                 onChange={(e) => { setExtras(e.target.value); resetMsg(); }}
                 placeholder="Arroz · Ensalada · Frijol · Tajadas" />
             </div>
-            <div>
-              <label className="label">➕ Adicionales (uno por línea)</label>
-              <textarea className="input resize-none" rows={5} value={adicionales}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-stone-500">Adicionales <span className="text-stone-400 font-normal">(uno por línea)</span></label>
+              <textarea className={inputCls + ' resize-none'} rows={5} value={adicionales}
                 onChange={(e) => { setAdicionales(e.target.value); resetMsg(); }}
                 placeholder={'Porción arroz $3.000\nPorción patacón $4.000'} />
             </div>
           </div>
         </div>
 
-        {/* ── Columna derecha ── */}
+        {/* ── Columna derecha — Mensaje ── */}
         <div className="space-y-4">
           <button
-            className="btn-primary w-full justify-center py-3 font-bold text-base"
+            className={`w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-bold transition-all ${
+              activeCount > 0
+                ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-200 active:scale-[.98]'
+                : 'bg-stone-100 text-stone-300 cursor-not-allowed'
+            }`}
             onClick={generateMessage}
             disabled={activeCount === 0}
           >
-            📱 Generar mensaje WhatsApp
+            <svg className={`w-[18px] h-[18px] ${activeCount > 0 ? 'text-[#25D366]' : 'text-stone-300'}`} viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            Generar mensaje para WhatsApp
           </button>
 
           {activeCount === 0 && (
-            <p className="text-xs text-yellow-500 text-center">⚠️ Selecciona al menos un plato</p>
+            <div className="flex items-center justify-center gap-2 text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2.5">
+              <AlertTriangle size={14} />
+              <p className="text-xs font-medium">Selecciona al menos un plato para generar el mensaje</p>
+            </div>
           )}
 
           {generatedMsg ? (
-            <div className="card p-4 space-y-3 border-orange-200">
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <h3 className="text-sm font-semibold text-orange-600">✅ Mensaje listo para WhatsApp</h3>
+                <div className="flex items-center gap-2">
+                  <Check size={15} className="text-emerald-500" />
+                  <h3 className="text-sm font-bold text-stone-700">Mensaje listo para WhatsApp</h3>
+                </div>
                 <div className="flex gap-2">
                   <button
-                    className={`btn-secondary text-xs py-1.5 px-3 ${copied ? '!border-emerald-500 !text-emerald-600' : ''}`}
                     onClick={copyMessage}
+                    className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
+                      copied
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                        : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                    }`}
                   >
-                    {copied ? '✅ Copiado' : '📋 Copiar'}
+                    {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
+                    {copied ? 'Copiado' : 'Copiar'}
                   </button>
                   <button
-                    className="btn text-xs py-1.5 px-4 font-bold text-white flex items-center gap-2"
+                    className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-all active:scale-95"
                     style={{ backgroundColor: '#25D366' }}
                     onClick={async () => {
                       await navigator.clipboard.writeText(generatedMsg);
@@ -418,30 +479,32 @@ export default function MenuDiaPage() {
                       window.open('https://wa.me', '_blank');
                     }}
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                     </svg>
                     Abrir WhatsApp
                   </button>
                 </div>
               </div>
+
               <textarea
-                className="input resize-none text-xs font-mono leading-relaxed"
+                className="w-full bg-stone-50 border border-stone-100 rounded-xl px-3 py-3 text-xs font-mono leading-relaxed text-stone-700 focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
                 rows={30}
                 value={generatedMsg}
                 onChange={(e) => setGeneratedMsg(e.target.value)}
               />
+
               {copied && (
-                <div className="bg-emerald-500/15 border border-emerald-200 text-emerald-600 text-sm px-3 py-2.5 rounded-lg flex items-center gap-2">
-                  <span>✅</span>
-                  <span><strong>Mensaje copiado.</strong> En WhatsApp abre el chat, mantén presionado el cuadro de texto y toca <strong>Pegar</strong>.</span>
+                <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-3 py-2.5 rounded-xl">
+                  <CheckCheck size={14} className="flex-shrink-0" />
+                  <span><strong>Mensaje copiado.</strong> En WhatsApp, mantén presionado el cuadro de texto y toca <strong>Pegar</strong>.</span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="card p-10 text-center text-stone-400 space-y-2">
-              <p className="text-4xl">📱</p>
-              <p className="text-sm">El mensaje aparecerá aquí listo para copiar y enviar</p>
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-12 flex flex-col items-center justify-center text-stone-300 gap-3">
+              <Smartphone size={36} strokeWidth={1.5} />
+              <p className="text-sm text-center">El mensaje aparecerá aquí listo para copiar y enviar por WhatsApp</p>
             </div>
           )}
         </div>

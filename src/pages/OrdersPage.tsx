@@ -5,6 +5,35 @@ import api from '../api/axios';
 import type { Order, Product, User } from '../types';
 import { StatusBadge, TypeBadge, Currency, Modal } from '../components/ui';
 import { useSocket } from '../hooks/useSocket';
+import {
+  Search,
+  X,
+  Plus,
+  Calendar,
+  CreditCard,
+  Banknote,
+  Smartphone,
+  ChefHat,
+  Printer,
+  Truck,
+  MapPin,
+  Phone,
+  User as UserIcon,
+  Clock,
+  MessageSquare,
+  Check,
+  ArrowRight,
+  Edit3,
+  Trash2,
+  Receipt,
+  Globe,
+  AlertCircle,
+  ShoppingCart,
+  Package,
+  ChevronRight,
+  Minus,
+  DollarSign,
+} from 'lucide-react';
 
 const TODAY = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
   .toISOString().split('T')[0];
@@ -22,9 +51,9 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 };
 
 const ONLINE_STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING_APPROVAL: { label: '🌐 En línea — Pendiente', cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700 border border-violet-300' },
-  APPROVED:         { label: '🌐 En línea — Aprobado',  cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700 border border-emerald-300' },
-  REJECTED:         { label: '🌐 En línea — Rechazado', cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-700 border border-red-300' },
+  PENDING_APPROVAL: { label: 'En línea — Pendiente', cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700 border border-violet-300' },
+  APPROVED:         { label: 'En línea — Aprobado',  cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700 border border-emerald-300' },
+  REJECTED:         { label: 'En línea — Rechazado', cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-700 border border-red-300' },
 };
 
 const isDeliveryOrder = (o: Order) =>
@@ -52,16 +81,29 @@ function ApproveModal({ order, onClose, onDone }: { order: Order; onClose: () =>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative card w-full max-w-sm shadow-2xl slide-in">
         <div className="flex items-center justify-between p-5 border-b border-stone-200">
-          <h3 className="font-semibold text-stone-800">Aprobar pedido #{order.id}</h3>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-700 text-xl">×</button>
+          <h3 className="font-semibold text-stone-800 flex items-center gap-2">
+            <Globe size={16} className="text-violet-500" />
+            Aprobar pedido #{order.id}
+          </h3>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-700">
+            <X size={20} />
+          </button>
         </div>
         <div className="p-5 space-y-4">
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-sm space-y-1">
             {order.items.map(i => (
               <p key={i.id} className="text-stone-600">{i.quantity}× {i.product.name}</p>
             ))}
-            <p className="font-bold text-orange-600 pt-1">${order.total.toLocaleString('es-CO')}</p>
-            {order.delivery && <p className="text-stone-500">📍 {order.delivery.address}</p>}
+            <p className="font-bold text-orange-600 pt-1 flex items-center gap-1">
+              <DollarSign size={14} />
+              {order.total.toLocaleString('es-CO')}
+            </p>
+            {order.delivery && (
+              <p className="text-stone-500 flex items-center gap-1">
+                <MapPin size={12} />
+                {order.delivery.address}
+              </p>
+            )}
           </div>
           <div>
             <label className="label">Asignar domiciliario <span className="text-stone-400 font-normal">(opcional)</span></label>
@@ -72,10 +114,12 @@ function ApproveModal({ order, onClose, onDone }: { order: Order; onClose: () =>
           </div>
           <div className="flex gap-2">
             <button onClick={async () => { await api.patch(`/orders/${order.id}/reject`, {}); onDone(); onClose(); }}
-              className="btn-danger flex-1 justify-center text-xs">✕ Rechazar</button>
+              className="btn-danger flex-1 justify-center text-xs flex items-center gap-1">
+              <X size={14} /> Rechazar
+            </button>
             <button onClick={approve} disabled={saving}
-              className="btn-success flex-1 justify-center text-xs disabled:opacity-50">
-              {saving ? '...' : '✓ Aprobar'}
+              className="btn-success flex-1 justify-center text-xs disabled:opacity-50 flex items-center gap-1">
+              {saving ? '...' : <><Check size={14} /> Aprobar</>}
             </button>
           </div>
         </div>
@@ -141,31 +185,51 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
       <div className="relative card w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col slide-in">
         <div className="flex items-center justify-between p-5 border-b border-stone-200">
           <div>
-            <h3 className="font-semibold text-stone-800">Editar Pedido #{order.id}</h3>
+            <h3 className="font-semibold text-stone-800 flex items-center gap-2">
+              <Edit3 size={16} />
+              Editar Pedido #{order.id}
+            </h3>
             <p className="text-stone-400 text-xs mt-0.5">
               {order.orderType === 'MESA' && order.tableNumber ? `Mesa ${order.tableNumber}` :
-               isDeliveryOrder(order) ? `🛵 ${order.delivery?.customerName}` : 'Para llevar'}
+               isDeliveryOrder(order) ? (
+                 <span className="flex items-center gap-1">
+                   <Truck size={12} />
+                   {order.delivery?.customerName}
+                 </span>
+               ) : 'Para llevar'}
             </p>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-700 text-xl">×</button>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-700">
+            <X size={20} />
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div>
-            <label className="label">Notas para cocina</label>
+            <label className="label flex items-center gap-1">
+              <MessageSquare size={12} />
+              Notas para cocina
+            </label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
               placeholder="Sin cebolla, bien cocido..." className="input resize-none" />
           </div>
           {cartItems.length > 0 && (
             <div>
-              <label className="label">Productos en el pedido</label>
+              <label className="label flex items-center gap-1">
+                <ShoppingCart size={12} />
+                Productos en el pedido
+              </label>
               <div className="space-y-1.5">
                 {cartItems.map(({ product, quantity }) => (
                   <div key={product.id} className="flex items-center justify-between bg-stone-100 rounded-lg px-3 py-2">
                     <span className="text-stone-700 text-sm truncate flex-1">{product.name}</span>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button onClick={() => remove(product.id)} className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-white text-xs">−</button>
-                      <span className="text-white text-sm w-5 text-center font-bold">{quantity}</span>
-                      <button onClick={() => add(product.id)} className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-white text-xs">+</button>
+                      <button onClick={() => remove(product.id)} className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-stone-600 flex items-center justify-center">
+                        <Minus size={12} />
+                      </button>
+                      <span className="text-stone-800 text-sm w-5 text-center font-bold">{quantity}</span>
+                      <button onClick={() => add(product.id)} className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-stone-600 flex items-center justify-center">
+                        <Plus size={12} />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -173,14 +237,23 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
             </div>
           )}
           <div>
-            <label className="label">Agregar productos</label>
-            <input className="input mb-2" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <label className="label flex items-center gap-1">
+              <Package size={12} />
+              Agregar productos
+            </label>
+            <div className="relative mb-2">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input className="input pl-9" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
               {filtered.map((p) => (
                 <button key={p.id} onClick={() => add(p.id)}
                   className={`text-left p-2.5 rounded-lg border text-xs transition-all ${cart[p.id] ? 'bg-orange-50 border-orange-500/40' : 'bg-stone-100 border-stone-300 hover:border-zinc-600'}`}>
                   <p className="text-stone-700 font-medium truncate">{p.name}</p>
-                  <p className="text-orange-400">${p.price.toLocaleString('es-CO')}</p>
+                  <p className="text-orange-400 flex items-center gap-0.5">
+                    <DollarSign size={10} />
+                    {p.price.toLocaleString('es-CO')}
+                  </p>
                   {cart[p.id] && <p className="text-orange-600 text-xs">En pedido: {cart[p.id]}</p>}
                 </button>
               ))}
@@ -190,14 +263,19 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
         <div className="p-5 border-t border-stone-200">
           <div className="flex justify-between items-center mb-3">
             <span className="text-stone-500 text-sm">Total</span>
-            <span className="text-orange-400 font-bold text-lg">${total.toLocaleString('es-CO')}</span>
+            <span className="text-orange-400 font-bold text-lg flex items-center gap-1">
+              <DollarSign size={18} />
+              {total.toLocaleString('es-CO')}
+            </span>
           </div>
           <div className="flex gap-2">
             <button onClick={handleSave} disabled={saving || !cartItems.length}
-              className="btn-primary flex-1 justify-center py-2.5 disabled:opacity-40">
-              {saving ? 'Guardando...' : 'Guardar cambios'}
+              className="btn-primary flex-1 justify-center py-2.5 disabled:opacity-40 flex items-center gap-1">
+              {saving ? 'Guardando...' : <><Check size={16} /> Guardar cambios</>}
             </button>
-            <button onClick={onClose} className="btn-secondary px-4">Cancelar</button>
+            <button onClick={onClose} className="btn-secondary px-4 flex items-center gap-1">
+              <X size={14} /> Cancelar
+            </button>
           </div>
         </div>
       </div>
@@ -218,10 +296,9 @@ function PaymentModal({ order, onConfirm, onClose }: {
     method !== 'EFECTIVO' || (cashGiven !== '' && Number(cashGiven) >= order.total)
   );
 
-  // Texto del botón según tipo de pedido
   const confirmLabel = isDeliveryOrder(order)
-    ? '✅ Registrar pago'
-    : '✅ Confirmar y entregar';
+    ? 'Registrar pago'
+    : 'Confirmar y entregar';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -229,40 +306,47 @@ function PaymentModal({ order, onConfirm, onClose }: {
       <div className="relative card w-full max-w-sm shadow-2xl slide-in">
         <div className="flex items-center justify-between p-5 border-b border-stone-200">
           <div>
-            <h3 className="font-semibold text-stone-800">
-              {isDeliveryOrder(order) ? '💰 Registrar pago — Domicilio' : 'Método de pago'}
+            <h3 className="font-semibold text-stone-800 flex items-center gap-2">
+              {isDeliveryOrder(order) ? (
+                <><DollarSign size={16} className="text-emerald-500" /> Registrar pago — Domicilio</>
+              ) : (
+                <><CreditCard size={16} className="text-orange-500" /> Método de pago</>
+              )}
             </h3>
-            <p className="text-stone-400 text-xs mt-0.5">
+            <p className="text-stone-400 text-xs mt-0.5 flex items-center gap-1">
+              <Receipt size={10} />
               #{order.id} · <Currency value={order.total} />
               {isDeliveryOrder(order) && order.delivery?.customerName && (
-                <> · {order.delivery.customerName}</>
+                <> · <UserIcon size={10} /> {order.delivery.customerName}</>
               )}
             </p>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-700 text-xl">×</button>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-700">
+            <X size={20} />
+          </button>
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Aviso para domicilios */}
           {isDeliveryOrder(order) && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
-              💡 El pedido seguirá activo para el domiciliario. Solo se registra el pago.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 flex items-start gap-2">
+              <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+              El pedido seguirá activo para el domiciliario. Solo se registra el pago.
             </div>
           )}
 
           <div className="grid grid-cols-3 gap-2">
             {[
-              { key: 'EFECTIVO',      icon: '💵', label: 'Efectivo' },
-              { key: 'TRANSFERENCIA', icon: '📲', label: 'Transferencia' },
-              { key: 'TARJETA',       icon: '💳', label: 'Tarjeta' },
-            ].map(({ key, icon, label }) => (
+              { key: 'EFECTIVO',      icon: Banknote, label: 'Efectivo' },
+              { key: 'TRANSFERENCIA', icon: Smartphone, label: 'Transferencia' },
+              { key: 'TARJETA',       icon: CreditCard, label: 'Tarjeta' },
+            ].map(({ key, icon: Icon, label }) => (
               <button key={key} onClick={() => { setMethod(key); setCashGiven(''); }}
                 className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
                   method === key
                     ? 'bg-orange-500/20 border-orange-500 text-orange-400'
                     : 'bg-stone-100 border-stone-300 text-stone-500 hover:border-zinc-600'
                 }`}>
-                <span className="text-2xl">{icon}</span>
+                <Icon size={24} />
                 <span className="text-xs font-medium">{label}</span>
               </button>
             ))}
@@ -270,27 +354,35 @@ function PaymentModal({ order, onConfirm, onClose }: {
 
           {method === 'EFECTIVO' && (
             <div className="space-y-2">
-              <label className="label">¿Cuánto entregó el cliente?</label>
+              <label className="label flex items-center gap-1">
+                <DollarSign size={12} />
+                ¿Cuánto entregó el cliente?
+              </label>
               <input type="number" className="input" autoFocus value={cashGiven}
                 onChange={(e) => setCashGiven(e.target.value)}
                 placeholder={`Mínimo $${order.total.toLocaleString('es-CO')}`} />
               {cashGiven && Number(cashGiven) >= order.total && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 flex justify-between items-center">
                   <span className="text-emerald-600 text-sm font-medium">Cambio</span>
-                  <span className="text-emerald-600 font-bold text-lg">
-                    ${(Number(cashGiven) - order.total).toLocaleString('es-CO')}
+                  <span className="text-emerald-600 font-bold text-lg flex items-center gap-1">
+                    <DollarSign size={16} />
+                    {(Number(cashGiven) - order.total).toLocaleString('es-CO')}
                   </span>
                 </div>
               )}
               {cashGiven && Number(cashGiven) < order.total && (
-                <p className="text-red-500 text-xs">Monto insuficiente</p>
+                <p className="text-red-500 text-xs flex items-center gap-1">
+                  <AlertCircle size={12} /> Monto insuficiente
+                </p>
               )}
             </div>
           )}
 
           {method === 'TRANSFERENCIA' && (
             <div className="bg-stone-100 border border-stone-300 rounded-xl p-4 text-xs space-y-2">
-              <p className="text-stone-500 font-medium mb-2">Datos para transferir</p>
+              <p className="text-stone-500 font-medium mb-2 flex items-center gap-1">
+                <Smartphone size={12} /> Datos para transferir
+              </p>
               <div className="flex justify-between"><span className="text-stone-400">Banco</span><span className="text-stone-800 font-medium">Nequi</span></div>
               <div className="flex justify-between"><span className="text-stone-400">Número</span><span className="text-stone-800 font-medium">311 2035078</span></div>
               <div className="flex justify-between"><span className="text-stone-400">A nombre de</span><span className="text-stone-800 font-medium">Claudia Márquez</span></div>
@@ -304,8 +396,8 @@ function PaymentModal({ order, onConfirm, onClose }: {
               change:    method === 'EFECTIVO' ? Number(cashGiven) - order.total : null,
             })}
             disabled={!canConfirm}
-            className="btn-success w-full justify-center py-3 font-bold disabled:opacity-40">
-            {confirmLabel}
+            className="btn-success w-full justify-center py-3 font-bold disabled:opacity-40 flex items-center gap-1">
+            <Check size={16} /> {confirmLabel}
           </button>
         </div>
       </div>
@@ -373,20 +465,15 @@ export default function OrdersPage() {
     return result;
   }, [orders, searchQuery]);
 
-  // ── Avanzar estado ────────────────────────────────────────────────────────
-  // Para domicilios: el avance de estado NUNCA abre el modal de pago
-  // El pago se maneja con un botón separado
   const advanceStatus = async (orderId: number, currentStatus: string, orderType: string) => {
     const next = NEXT_STATUS[currentStatus];
     if (!next) return;
 
-    // Pedidos en local/para llevar: al llegar a DELIVERED abre modal de pago
     if (next === 'DELIVERED' && !isDeliveryOrder({ orderType } as any)) {
       setPaymentOrder(orders.find((o) => o.id === orderId) || null);
       return;
     }
 
-    // Domicilios y cualquier otro caso: avanzar estado directamente
     setUpdating(orderId);
     try {
       await ordersApi.updateStatus(orderId, next);
@@ -394,7 +481,6 @@ export default function OrdersPage() {
     } finally { setUpdating(null); }
   };
 
-  // ── Confirmar pago ────────────────────────────────────────────────────────
   const handlePaymentConfirm = async (info: { method: string; cashGiven: number | null; change: number | null }) => {
     if (!paymentOrder) return;
     const orderId  = paymentOrder.id;
@@ -405,8 +491,6 @@ export default function OrdersPage() {
       await ordersApi.processPayment(orderId, {
         paymentMethod: info.method,
         cashGiven:     info.cashGiven,
-        // Domicilios: NO marcar como entregado al cobrar
-        // Solo el domiciliario confirma la entrega desde su vista
         markDelivered: !delivery,
       });
       printApi.receipt(orderId).catch(() => {});
@@ -440,25 +524,32 @@ export default function OrdersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-stone-800">Pedidos</h1>
+          <h1 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+            <ShoppingCart size={20} />
+            Pedidos
+          </h1>
           <p className="text-stone-400 text-sm mt-0.5">
             {isSearching
               ? `${filteredOrders.length} resultado(s) para "${searchQuery}"`
               : `${orders.length} pedido(s) encontrados`}
           </p>
         </div>
-        <button className="btn-primary" onClick={() => navigate('/orders/new')}>➕ Nuevo</button>
+        <button className="btn-primary flex items-center gap-1" onClick={() => navigate('/orders/new')}>
+          <Plus size={16} /> Nuevo
+        </button>
       </div>
 
       {/* Búsqueda */}
       <div className="relative">
-        <span className="absolute inset-y-0 left-3 flex items-center text-stone-400 text-sm">🔍</span>
+        <Search size={16} className="absolute inset-y-0 left-3 flex items-center text-stone-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
         <input className="input pl-9 pr-9"
           placeholder="Buscar por #pedido, mesa, cliente, notas o producto..."
           value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         {searchQuery && (
           <button onClick={() => setSearchQuery('')}
-            className="absolute inset-y-0 right-3 flex items-center text-stone-400 hover:text-stone-700">✕</button>
+            className="absolute inset-y-0 right-3 flex items-center text-stone-400 hover:text-stone-700">
+            <X size={16} />
+          </button>
         )}
       </div>
 
@@ -466,8 +557,8 @@ export default function OrdersPage() {
         <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap md:flex-wrap">
           {['#1', 'Mesa 1', 'domicilio', 'desmechada', 'asada'].map((hint) => (
             <button key={hint} onClick={() => setSearchQuery(hint)}
-              className="text-xs text-stone-400 bg-stone-100/60 border border-stone-300 rounded-full px-2.5 py-1 hover:text-orange-400 hover:border-orange-700 transition-colors">
-              {hint}
+              className="text-xs text-stone-400 bg-stone-100/60 border border-stone-300 rounded-full px-2.5 py-1 hover:text-orange-400 hover:border-orange-700 transition-colors flex items-center gap-1">
+              <Search size={10} /> {hint}
             </button>
           ))}
         </div>
@@ -483,20 +574,27 @@ export default function OrdersPage() {
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
-        <input type="date" className="input w-auto text-sm" value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)} />
+        <div className="relative">
+          <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input type="date" className="input w-auto text-sm pl-9" value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)} />
+        </div>
         {dateFilter !== TODAY && (
-          <button onClick={() => setDateFilter(TODAY)} className="text-xs text-orange-400 hover:text-orange-600">Hoy</button>
+          <button onClick={() => setDateFilter(TODAY)} className="text-xs text-orange-400 hover:text-orange-600 flex items-center gap-1">
+            <Clock size={10} /> Hoy
+          </button>
         )}
         <button onClick={() => setDateFilter('')}
-          className={`text-xs transition-colors ${!dateFilter ? 'text-orange-400' : 'text-stone-400 hover:text-stone-600'}`}>
-          Todas las fechas
+          className={`text-xs transition-colors flex items-center gap-1 ${!dateFilter ? 'text-orange-400' : 'text-stone-400 hover:text-stone-600'}`}>
+          <Calendar size={10} /> Todas las fechas
         </button>
       </div>
 
       {/* Lista */}
       {loading ? (
-        <p className="text-stone-400 animate-pulse text-sm py-8 text-center">Cargando pedidos...</p>
+        <p className="text-stone-400 animate-pulse text-sm py-8 text-center flex items-center justify-center gap-2">
+          <Clock size={16} className="animate-spin" /> Cargando pedidos...
+        </p>
       ) : (
         <div className="space-y-3">
           {filteredOrders.map((order) => {
@@ -517,23 +615,26 @@ export default function OrdersPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-stone-800 font-semibold text-sm">
+                    <span className="text-stone-800 font-semibold text-sm flex items-center gap-1">
+                      <Receipt size={12} />
                       Pedido #<Highlight text={String(order.id)} query={q.replace('#', '')} />
                     </span>
                     <span className={STATUS_LABELS[order.status].cls}>{STATUS_LABELS[order.status].label}</span>
                     <TypeBadge type={order.orderType} />
                     {(order as any).onlineStatus && ONLINE_STATUS[(order as any).onlineStatus] && (
                       <span className={ONLINE_STATUS[(order as any).onlineStatus].cls}>
-                        {ONLINE_STATUS[(order as any).onlineStatus].label}
+                        <Globe size={10} className="inline" />
+                        {' '}{ONLINE_STATUS[(order as any).onlineStatus].label.replace('🌐 ', '')}
                       </span>
                     )}
                     {order.orderType === 'MESA' && order.tableNumber && (
-                      <span className="text-xs text-stone-400">
-                        Mesa <Highlight text={String(order.tableNumber)} query={q} />
+                      <span className="text-xs text-stone-400 flex items-center gap-1">
+                        <MapPin size={10} /> Mesa <Highlight text={String(order.tableNumber)} query={q} />
                       </span>
                     )}
                   </div>
-                  <span className="text-orange-400 font-bold text-base flex-shrink-0">
+                  <span className="text-orange-400 font-bold text-base flex-shrink-0 flex items-center gap-0.5">
+                    <DollarSign size={14} />
                     <Currency value={order.total} />
                   </span>
                 </div>
@@ -542,12 +643,19 @@ export default function OrdersPage() {
                 {delivery && order.delivery && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-2 text-xs space-y-0.5">
                     {order.delivery.customerName && (
-                      <p className="font-semibold text-orange-600">
-                        🛵 <Highlight text={order.delivery.customerName} query={q} />
+                      <p className="font-semibold text-orange-600 flex items-center gap-1">
+                        <Truck size={12} />
+                        <Highlight text={order.delivery.customerName} query={q} />
                       </p>
                     )}
-                    {order.delivery.phone && <p className="text-stone-500">📞 {order.delivery.phone}</p>}
-                    <p className="text-stone-500">📍 <Highlight text={order.delivery.address} query={q} /></p>
+                    {order.delivery.phone && (
+                      <p className="text-stone-500 flex items-center gap-1">
+                        <Phone size={10} /> {order.delivery.phone}
+                      </p>
+                    )}
+                    <p className="text-stone-500 flex items-center gap-1">
+                      <MapPin size={10} /> <Highlight text={order.delivery.address} query={q} />
+                    </p>
                     {order.delivery.neighborhood && <p className="text-stone-400">{order.delivery.neighborhood}</p>}
                   </div>
                 )}
@@ -563,22 +671,29 @@ export default function OrdersPage() {
                 </p>
 
                 {order.notes && (
-                  <p className="text-yellow-400/70 text-xs mt-0.5 mb-1">
-                    💬 <Highlight text={order.notes} query={q} />
+                  <p className="text-yellow-400/70 text-xs mt-0.5 mb-1 flex items-center gap-1">
+                    <MessageSquare size={10} />
+                    <Highlight text={order.notes} query={q} />
                   </p>
                 )}
 
                 {/* Meta + estado de pago */}
                 <div className="flex items-center gap-3 text-xs text-stone-400 mb-3 flex-wrap">
-                  <span>{new Date(order.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</span>
-                  <span>👤 <span className="text-stone-500">{order.user.name}</span></span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={10} />
+                    {new Date(order.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <UserIcon size={10} />
+                    <span className="text-stone-500">{order.user.name}</span>
+                  </span>
                   {isPaid ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 font-medium text-xs">
-                      {order.paymentMethod === 'EFECTIVO' ? '💵' : order.paymentMethod === 'TRANSFERENCIA' ? '📲' : '💳'} Pagado
+                      <Check size={10} /> Pagado
                     </span>
                   ) : order.status !== 'CANCELLED' ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-200 font-medium text-xs">
-                      💰 Por cobrar
+                      <DollarSign size={10} /> Por cobrar
                     </span>
                   ) : null}
                 </div>
@@ -589,63 +704,71 @@ export default function OrdersPage() {
                   {/* Aprobar pedido online */}
                   {(order as any).onlineStatus === 'PENDING_APPROVAL' && (
                     <button onClick={() => setApproveOrder(order)}
-                      className="flex-1 bg-violet-500 hover:bg-violet-400 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
-                      🌐 Aprobar / Rechazar
+                      className="flex-1 bg-violet-500 hover:bg-violet-400 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1">
+                      <Globe size={12} /> Aprobar / Rechazar
                     </button>
                   )}
 
-                  {/* ── DOMICILIO: botón de pago SIEMPRE visible (cuando no está pagado) ── */}
+                  {/* Domicilio: botón de pago */}
                   {delivery && !isPaid && isActive && (order as any).onlineStatus !== 'PENDING_APPROVAL' && (
                     <button
                       onClick={() => setPaymentOrder(order)}
                       disabled={updating === order.id}
-                      className="flex-1 text-xs font-bold px-3 py-2 rounded-lg transition-colors bg-emerald-500 hover:bg-emerald-400 text-white disabled:opacity-50">
-                      💰 Registrar pago
+                      className="flex-1 text-xs font-bold px-3 py-2 rounded-lg transition-colors bg-emerald-500 hover:bg-emerald-400 text-white disabled:opacity-50 flex items-center justify-center gap-1">
+                      <DollarSign size={12} /> Registrar pago
                     </button>
                   )}
 
-                  {/* ── Avanzar estado ── */}
+                  {/* Avanzar estado */}
                   {canAdvance && (order as any).onlineStatus !== 'PENDING_APPROVAL' && (
                     <button
                       onClick={() => advanceStatus(order.id, order.status, order.orderType)}
                       disabled={updating === order.id}
-                      className={`flex-1 text-xs font-bold px-3 py-2 rounded-lg transition-colors disabled:opacity-50 ${
-                        // Para domicilios en READY: solo avanzar (sin pago)
-                        // Para locales en READY: cobrar y entregar (naranja)
+                      className={`flex-1 text-xs font-bold px-3 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1 ${
                         !delivery && NEXT_STATUS[order.status] === 'DELIVERED'
                           ? 'bg-orange-500 hover:bg-orange-400 text-white'
                           : 'bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800'
                       }`}>
-                      {updating === order.id ? '...' :
-                       // Domicilio: mostrar "En camino" / avance normal (pago ya se maneja aparte)
-                       delivery && NEXT_STATUS[order.status] === 'DELIVERED'
-                         ? '🛵 Marcar en camino'
-                       : !delivery && NEXT_STATUS[order.status] === 'DELIVERED'
-                         ? '💰 Cobrar y entregar'
-                       : `→ ${STATUS_LABELS[NEXT_STATUS[order.status]].label}`}
+                      {updating === order.id ? (
+                        <Clock size={12} className="animate-spin" />
+                      ) : delivery && NEXT_STATUS[order.status] === 'DELIVERED' ? (
+                        <><Truck size={12} /> Marcar en camino</>
+                      ) : !delivery && NEXT_STATUS[order.status] === 'DELIVERED' ? (
+                        <><DollarSign size={12} /> Cobrar y entregar</>
+                      ) : (
+                        <><ArrowRight size={12} /> {STATUS_LABELS[NEXT_STATUS[order.status]].label}</>
+                      )}
                     </button>
                   )}
 
                   {canEdit && (
                     <button onClick={() => setEditOrder(order)}
-                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 text-xs font-medium px-3 py-2 rounded-lg transition-colors">
-                      ✏️
+                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 text-xs font-medium px-3 py-2 rounded-lg transition-colors flex items-center gap-1">
+                      <Edit3 size={12} />
                     </button>
                   )}
                   {canCancel && (
                     <button onClick={() => cancelOrder(order.id)} disabled={cancelling === order.id}
-                      className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 text-xs font-medium px-3 py-2 rounded-lg disabled:opacity-50 transition-colors">
-                      {cancelling === order.id ? '...' : 'Cancelar'}
+                      className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 text-xs font-medium px-3 py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center gap-1">
+                      {cancelling === order.id ? (
+                        <Clock size={12} className="animate-spin" />
+                      ) : (
+                        <><Trash2 size={12} /> Cancelar</>
+                      )}
                     </button>
                   )}
                   {order.status !== 'CANCELLED' && (
                     <>
                       <button onClick={() => printApi.kitchen(order.id)}
-                        className="bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-600 text-xs px-3 py-2 rounded-lg transition-colors"
-                        title="Ticket cocina">🍳</button>
+                        className="bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-600 text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
+                        title="Ticket cocina">
+                        <ChefHat size={12} />
+                      </button>
                       <button onClick={() => printApi.receipt(order.id)}
-                        className="bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-600 text-xs px-3 py-2 rounded-lg transition-colors"
-                        title="Imprimir factura">🖨️</button>
+                        className="bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-600 text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
+                        title="Imprimir factura">
+                        <Printer size={12} />
+                      </button>
                     </>
                   )}
                 </div>
@@ -657,14 +780,16 @@ export default function OrdersPage() {
             <div className="text-center py-16 text-stone-400">
               {isSearching ? (
                 <>
-                  <p className="text-4xl mb-3">🔍</p>
+                  <Search size={48} className="mx-auto mb-3 opacity-30" />
                   <p className="text-stone-400">Sin resultados para <span className="text-orange-400">"{searchQuery}"</span></p>
                   <button onClick={() => setSearchQuery('')}
-                    className="mt-3 text-xs text-orange-400 hover:text-orange-600">Limpiar búsqueda</button>
+                    className="mt-3 text-xs text-orange-400 hover:text-orange-600 flex items-center gap-1 mx-auto">
+                    <X size={10} /> Limpiar búsqueda
+                  </button>
                 </>
               ) : (
                 <>
-                  <p className="text-4xl mb-3">🧾</p>
+                  <Receipt size={48} className="mx-auto mb-3 opacity-30" />
                   <p>No hay pedidos con este filtro</p>
                 </>
               )}

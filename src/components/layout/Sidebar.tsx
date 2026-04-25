@@ -30,7 +30,6 @@ const navItems = [
   { to: '/products',       icon: UtensilsCrossed, label: 'Productos',    roles: ['ADMIN'] },
   { to: '/categories',     icon: Tag,             label: 'Categorías',   roles: ['ADMIN'] },
   { to: '/users',          icon: Users,           label: 'Usuarios',     roles: ['ADMIN'] },
-  { to: '/print-settings', icon: Printer,         label: 'Impresora',    roles: ['ADMIN'] },
 ];
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
