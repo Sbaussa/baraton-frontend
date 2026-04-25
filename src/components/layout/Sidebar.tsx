@@ -20,17 +20,17 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/dashboard',       icon: LayoutDashboard,  label: 'Dashboard',    roles: ['ADMIN'] },
-  { to: '/menu',            icon: CalendarDays,      label: 'Menú del Día', roles: ['ADMIN', 'CASHIER'] },
-  { to: '/orders',          icon: ClipboardList,     label: 'Pedidos',      roles: ['ADMIN', 'CASHIER', 'DELIVERY'] },
-  { to: '/orders/new',      icon: PlusCircle,        label: 'Nuevo Pedido', roles: ['ADMIN', 'CASHIER'] },
-  { to: '/mesas',           icon: Armchair,          label: 'Mesas',        roles: ['ADMIN', 'CASHIER'] },
-  { to: '/kitchen',         icon: ChefHat,           label: 'Cocina',       roles: ['ADMIN', 'KITCHEN'] },
-  { to: '/delivery',        icon: Bike,              label: 'Domicilios',   roles: ['ADMIN', 'CASHIER', 'DELIVERY'] },
-  { to: '/products',        icon: UtensilsCrossed,   label: 'Productos',    roles: ['ADMIN'] },
-  { to: '/categories',      icon: Tag,               label: 'Categorías',   roles: ['ADMIN'] },
-  { to: '/users',           icon: Users,             label: 'Usuarios',     roles: ['ADMIN'] },
-  { to: '/print-settings',  icon: Printer,           label: 'Impresora',    roles: ['ADMIN'] },
+  { to: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard',    roles: ['ADMIN'] },
+  { to: '/menu',           icon: CalendarDays,    label: 'Menú del Día', roles: ['ADMIN', 'CASHIER'] },
+  { to: '/orders',         icon: ClipboardList,   label: 'Pedidos',      roles: ['ADMIN', 'CASHIER', 'DELIVERY'] },
+  { to: '/orders/new',     icon: PlusCircle,      label: 'Nuevo Pedido', roles: ['ADMIN', 'CASHIER'] },
+  { to: '/mesas',          icon: Armchair,        label: 'Mesas',        roles: ['ADMIN', 'CASHIER'] },
+  { to: '/kitchen',        icon: ChefHat,         label: 'Cocina',       roles: ['ADMIN', 'KITCHEN'] },
+  { to: '/delivery',       icon: Bike,            label: 'Domicilios',   roles: ['ADMIN', 'CASHIER', 'DELIVERY'] },
+  { to: '/products',       icon: UtensilsCrossed, label: 'Productos',    roles: ['ADMIN'] },
+  { to: '/categories',     icon: Tag,             label: 'Categorías',   roles: ['ADMIN'] },
+  { to: '/users',          icon: Users,           label: 'Usuarios',     roles: ['ADMIN'] },
+  { to: '/print-settings', icon: Printer,         label: 'Impresora',    roles: ['ADMIN'] },
 ];
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
@@ -42,21 +42,27 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const roleLabel: Record<string, string> = {
-    ADMIN: 'Administrador',
-    CASHIER: 'Cajera',
-    KITCHEN: 'Cocina',
+    ADMIN:    'Administrador',
+    CASHIER:  'Cajera',
+    KITCHEN:  'Cocina',
     DELIVERY: 'Domiciliario',
   };
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-200 border-r ${collapsed ? 'w-16' : 'w-56'}
-        h-screen md:h-screen
-        max-h-screen
-      `}
-      style={{ backgroundColor: '#FFFFFF', borderColor: '#E7DDD4' }}
+      className={`flex flex-col transition-all duration-200 border-r ${collapsed ? 'w-16' : 'w-56'}`}
+      style={{
+        backgroundColor: '#FFFFFF',
+        borderColor: '#E7DDD4',
+        // ── FIX MÓVIL ──────────────────────────────────────────────
+        // dvh = dynamic viewport height: descuenta la barra del navegador
+        // en iOS Safari y Android Chrome. Con h-screen (100vh) el sidebar
+        // era más alto que la pantalla visible y el botón quedaba tapado.
+        // Fallback a 100vh para browsers viejos que no soporten dvh.
+        height: '100dvh',
+      }}
     >
-      {/* Header */}
+      {/* ── Header ── */}
       <div
         className={`flex items-center gap-3 p-4 border-b flex-shrink-0 ${collapsed ? 'justify-center' : ''}`}
         style={{ borderColor: '#E7DDD4' }}
@@ -69,7 +75,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           </div>
         )}
 
-        {/* Colapsar en desktop */}
+        {/* Colapsar — solo desktop */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="flex-shrink-0 transition-colors hidden md:flex items-center justify-center rounded hover:bg-stone-100 p-0.5"
@@ -78,7 +84,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
 
-        {/* Cerrar en móvil */}
+        {/* Cerrar — solo móvil */}
         {onClose && (
           <button onClick={onClose} className="flex-shrink-0 text-stone-400 hover:text-stone-700 md:hidden">
             <X size={20} />
@@ -86,7 +92,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      {/* Nav — scrollable, ocupa el espacio disponible entre header y footer */}
+      {/* ── Nav (scrollable) ── */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0">
         {visible.map((item) => {
           const Icon = item.icon;
@@ -112,7 +118,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      {/* Footer — siempre visible en la parte inferior */}
+      {/* ── Footer — siempre visible, nunca comprimido ── */}
       <div
         className={`p-3 border-t flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}
         style={{ borderColor: '#E7DDD4' }}
@@ -120,7 +126,9 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         {!collapsed && (
           <div className="mb-2 px-1">
             <p className="text-xs font-medium truncate text-stone-700">{user?.name}</p>
-            <p className="text-xs" style={{ color: '#A89E95' }}>{user ? roleLabel[user.role] : ''}</p>
+            <p className="text-xs" style={{ color: '#A89E95' }}>
+              {user ? roleLabel[user.role] : ''}
+            </p>
           </div>
         )}
         <button
