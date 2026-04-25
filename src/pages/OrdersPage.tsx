@@ -27,10 +27,13 @@ const ONLINE_STATUS: Record<string, { label: string; cls: string }> = {
   REJECTED:         { label: '🌐 En línea — Rechazado', cls: 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-700 border border-red-300' },
 };
 
+const isDeliveryOrder = (o: Order) =>
+  o.orderType === 'DOMICILIO' || (o.orderType as string) === 'ONLINE';
+
 function ApproveModal({ order, onClose, onDone }: { order: Order; onClose: () => void; onDone: () => void }) {
-  const [users, setUsers]         = useState<User[]>([]);
+  const [users, setUsers]               = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
-  const [saving, setSaving]       = useState(false);
+  const [saving, setSaving]             = useState(false);
 
   useEffect(() => {
     usersApi.getAll().then(all => setUsers(all.filter(u => ['DELIVERY','CASHIER','ADMIN'].includes(u.role))));
@@ -81,7 +84,6 @@ function ApproveModal({ order, onClose, onDone }: { order: Order; onClose: () =>
   );
 }
 
-// ── Highlight búsqueda ───────────────────────────────────────────────────────
 function Highlight({ text, query }: { text: string; query: string }) {
   if (!query || !text) return <>{text}</>;
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
@@ -97,7 +99,6 @@ function Highlight({ text, query }: { text: string; query: string }) {
   );
 }
 
-// ── Modal editar pedido ──────────────────────────────────────────────────────
 function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: () => void; onSaved: () => void }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<Record<number, number>>(() => {
@@ -115,18 +116,10 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
     .map(([id, qty]) => ({ product: products.find((p) => p.id === Number(id)), quantity: qty }))
     .filter((i) => i.product) as { product: Product; quantity: number }[];
 
-  const total = cartItems.reduce((s, { product, quantity }) => s + product.price * quantity, 0);
-
-  const add    = (id: number) => setCart((p) => ({ ...p, [id]: (p[id] || 0) + 1 }));
-  const remove = (id: number) => setCart((p) => {
-    const n = { ...p };
-    if (n[id] > 1) n[id]--; else delete n[id];
-    return n;
-  });
-
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const total    = cartItems.reduce((s, { product, quantity }) => s + product.price * quantity, 0);
+  const add      = (id: number) => setCart((p) => ({ ...p, [id]: (p[id] || 0) + 1 }));
+  const remove   = (id: number) => setCart((p) => { const n = { ...p }; if (n[id] > 1) n[id]--; else delete n[id]; return n; });
+  const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
 
   const handleSave = async () => {
     if (!cartItems.length) return;
@@ -151,20 +144,17 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
             <h3 className="font-semibold text-stone-800">Editar Pedido #{order.id}</h3>
             <p className="text-stone-400 text-xs mt-0.5">
               {order.orderType === 'MESA' && order.tableNumber ? `Mesa ${order.tableNumber}` :
-               order.orderType === 'DOMICILIO' ? `🛵 ${order.delivery?.customerName}` : 'Para llevar'}
+               isDeliveryOrder(order) ? `🛵 ${order.delivery?.customerName}` : 'Para llevar'}
             </p>
           </div>
           <button onClick={onClose} className="text-stone-400 hover:text-stone-700 text-xl">×</button>
         </div>
-
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div>
             <label className="label">Notas para cocina</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
-              placeholder="Sin cebolla, bien cocido..."
-              className="input resize-none" />
+              placeholder="Sin cebolla, bien cocido..." className="input resize-none" />
           </div>
-
           {cartItems.length > 0 && (
             <div>
               <label className="label">Productos en el pedido</label>
@@ -173,28 +163,22 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
                   <div key={product.id} className="flex items-center justify-between bg-stone-100 rounded-lg px-3 py-2">
                     <span className="text-stone-700 text-sm truncate flex-1">{product.name}</span>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button onClick={() => remove(product.id)}
-                        className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-white text-xs">−</button>
+                      <button onClick={() => remove(product.id)} className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-white text-xs">−</button>
                       <span className="text-white text-sm w-5 text-center font-bold">{quantity}</span>
-                      <button onClick={() => add(product.id)}
-                        className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-white text-xs">+</button>
+                      <button onClick={() => add(product.id)} className="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 text-white text-xs">+</button>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
           <div>
             <label className="label">Agregar productos</label>
-            <input className="input mb-2" placeholder="Buscar..." value={search}
-              onChange={(e) => setSearch(e.target.value)} />
+            <input className="input mb-2" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
               {filtered.map((p) => (
                 <button key={p.id} onClick={() => add(p.id)}
-                  className={`text-left p-2.5 rounded-lg border text-xs transition-all ${
-                    cart[p.id] ? 'bg-orange-50 border-orange-500/40' : 'bg-stone-100 border-stone-300 hover:border-zinc-600'
-                  }`}>
+                  className={`text-left p-2.5 rounded-lg border text-xs transition-all ${cart[p.id] ? 'bg-orange-50 border-orange-500/40' : 'bg-stone-100 border-stone-300 hover:border-zinc-600'}`}>
                   <p className="text-stone-700 font-medium truncate">{p.name}</p>
                   <p className="text-orange-400">${p.price.toLocaleString('es-CO')}</p>
                   {cart[p.id] && <p className="text-orange-600 text-xs">En pedido: {cart[p.id]}</p>}
@@ -203,7 +187,6 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
             </div>
           </div>
         </div>
-
         <div className="p-5 border-t border-stone-200">
           <div className="flex justify-between items-center mb-3">
             <span className="text-stone-500 text-sm">Total</span>
@@ -222,7 +205,7 @@ function EditOrderModal({ order, onClose, onSaved }: { order: Order; onClose: ()
   );
 }
 
-// ── Modal pago ───────────────────────────────────────────────────────────────
+// ── Modal de pago ─────────────────────────────────────────────────────────────
 function PaymentModal({ order, onConfirm, onClose }: {
   order: Order;
   onConfirm: (info: { method: string; cashGiven: number | null; change: number | null }) => void;
@@ -235,21 +218,38 @@ function PaymentModal({ order, onConfirm, onClose }: {
     method !== 'EFECTIVO' || (cashGiven !== '' && Number(cashGiven) >= order.total)
   );
 
+  // Texto del botón según tipo de pedido
+  const confirmLabel = isDeliveryOrder(order)
+    ? '✅ Registrar pago'
+    : '✅ Confirmar y entregar';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div className="relative card w-full max-w-sm shadow-2xl slide-in">
         <div className="flex items-center justify-between p-5 border-b border-stone-200">
           <div>
-            <h3 className="font-semibold text-stone-800">Método de pago</h3>
+            <h3 className="font-semibold text-stone-800">
+              {isDeliveryOrder(order) ? '💰 Registrar pago — Domicilio' : 'Método de pago'}
+            </h3>
             <p className="text-stone-400 text-xs mt-0.5">
               #{order.id} · <Currency value={order.total} />
+              {isDeliveryOrder(order) && order.delivery?.customerName && (
+                <> · {order.delivery.customerName}</>
+              )}
             </p>
           </div>
           <button onClick={onClose} className="text-stone-400 hover:text-stone-700 text-xl">×</button>
         </div>
 
         <div className="p-5 space-y-4">
+          {/* Aviso para domicilios */}
+          {isDeliveryOrder(order) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
+              💡 El pedido seguirá activo para el domiciliario. Solo se registra el pago.
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-2">
             {[
               { key: 'EFECTIVO',      icon: '💵', label: 'Efectivo' },
@@ -305,7 +305,7 @@ function PaymentModal({ order, onConfirm, onClose }: {
             })}
             disabled={!canConfirm}
             className="btn-success w-full justify-center py-3 font-bold disabled:opacity-40">
-            ✅ Confirmar y entregar
+            {confirmLabel}
           </button>
         </div>
       </div>
@@ -313,18 +313,18 @@ function PaymentModal({ order, onConfirm, onClose }: {
   );
 }
 
-// ── Página principal ─────────────────────────────────────────────────────────
+// ── Página principal ──────────────────────────────────────────────────────────
 export default function OrdersPage() {
   const navigate = useNavigate();
-  const [orders, setOrders]           = useState<Order[]>([]);
-  const [loading, setLoading]         = useState(true);
+  const [orders, setOrders]             = useState<Order[]>([]);
+  const [loading, setLoading]           = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
-  const [dateFilter, setDateFilter]   = useState(TODAY);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [updating, setUpdating]       = useState<number | null>(null);
-  const [cancelling, setCancelling]   = useState<number | null>(null);
+  const [dateFilter, setDateFilter]     = useState(TODAY);
+  const [searchQuery, setSearchQuery]   = useState('');
+  const [updating, setUpdating]         = useState<number | null>(null);
+  const [cancelling, setCancelling]     = useState<number | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<Order | null>(null);
-  const [editOrder, setEditOrder]     = useState<Order | null>(null);
+  const [editOrder, setEditOrder]       = useState<Order | null>(null);
   const [approveOrder, setApproveOrder] = useState<Order | null>(null);
   const socket = useSocket('cashier');
 
@@ -341,14 +341,12 @@ export default function OrdersPage() {
   }, [statusFilter, dateFilter]);
 
   useEffect(() => { load(); }, [load]);
-
   useEffect(() => {
     socket.on('new-order', load);
     socket.on('order-status-changed', load);
     return () => { socket.off('new-order', load); socket.off('order-status-changed', load); };
   }, [socket, load]);
 
-  // Búsqueda local + orden: activos primero
   const STATUS_ORDER: Record<string, number> = {
     PENDING: 0, PREPARING: 1, READY: 2, DELIVERED: 3, CANCELLED: 4,
   };
@@ -366,25 +364,29 @@ export default function OrdersPage() {
         (o.delivery?.address || '').toLowerCase().includes(q)
       );
     });
-
-    // Activos primero, luego por fecha desc
     result = [...result].sort((a, b) => {
       const sA = STATUS_ORDER[a.status] ?? 9;
       const sB = STATUS_ORDER[b.status] ?? 9;
       if (sA !== sB) return sA - sB;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-
     return result;
   }, [orders, searchQuery]);
 
-  const advanceStatus = async (orderId: number, currentStatus: string) => {
+  // ── Avanzar estado ────────────────────────────────────────────────────────
+  // Para domicilios: el avance de estado NUNCA abre el modal de pago
+  // El pago se maneja con un botón separado
+  const advanceStatus = async (orderId: number, currentStatus: string, orderType: string) => {
     const next = NEXT_STATUS[currentStatus];
     if (!next) return;
-    if (next === 'DELIVERED') {
+
+    // Pedidos en local/para llevar: al llegar a DELIVERED abre modal de pago
+    if (next === 'DELIVERED' && !isDeliveryOrder({ orderType } as any)) {
       setPaymentOrder(orders.find((o) => o.id === orderId) || null);
       return;
     }
+
+    // Domicilios y cualquier otro caso: avanzar estado directamente
     setUpdating(orderId);
     try {
       await ordersApi.updateStatus(orderId, next);
@@ -392,19 +394,20 @@ export default function OrdersPage() {
     } finally { setUpdating(null); }
   };
 
+  // ── Confirmar pago ────────────────────────────────────────────────────────
   const handlePaymentConfirm = async (info: { method: string; cashGiven: number | null; change: number | null }) => {
     if (!paymentOrder) return;
-    const orderId   = paymentOrder.id;
-    // Capturar tipo ANTES de cerrar el modal (evita que sea null al leer)
-    const isDelivery = paymentOrder.orderType === 'DOMICILIO' || (paymentOrder.orderType as string) === 'ONLINE';
-    // Cerrar modal inmediatamente para feedback instantáneo
+    const orderId  = paymentOrder.id;
+    const delivery = isDeliveryOrder(paymentOrder);
     setPaymentOrder(null);
     setUpdating(orderId);
     try {
       await ordersApi.processPayment(orderId, {
         paymentMethod: info.method,
-        cashGiven: info.cashGiven,
-        markDelivered: !isDelivery, // domicilios: NO marcar entregado, solo registrar pago
+        cashGiven:     info.cashGiven,
+        // Domicilios: NO marcar como entregado al cobrar
+        // Solo el domiciliario confirma la entrega desde su vista
+        markDelivered: !delivery,
       });
       printApi.receipt(orderId).catch(() => {});
       load();
@@ -431,22 +434,8 @@ export default function OrdersPage() {
           onClose={() => setPaymentOrder(null)}
         />
       )}
-
-      {editOrder && (
-        <EditOrderModal
-          order={editOrder}
-          onClose={() => setEditOrder(null)}
-          onSaved={load}
-        />
-      )}
-
-      {approveOrder && (
-        <ApproveModal
-          order={approveOrder}
-          onClose={() => setApproveOrder(null)}
-          onDone={load}
-        />
-      )}
+      {editOrder    && <EditOrderModal  order={editOrder}    onClose={() => setEditOrder(null)}    onSaved={load} />}
+      {approveOrder && <ApproveModal    order={approveOrder} onClose={() => setApproveOrder(null)} onDone={load}  />}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -464,19 +453,15 @@ export default function OrdersPage() {
       {/* Búsqueda */}
       <div className="relative">
         <span className="absolute inset-y-0 left-3 flex items-center text-stone-400 text-sm">🔍</span>
-        <input
-          className="input pl-9 pr-9"
+        <input className="input pl-9 pr-9"
           placeholder="Buscar por #pedido, mesa, cliente, notas o producto..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+          value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         {searchQuery && (
           <button onClick={() => setSearchQuery('')}
             className="absolute inset-y-0 right-3 flex items-center text-stone-400 hover:text-stone-700">✕</button>
         )}
       </div>
 
-      {/* Sugerencias */}
       {!searchQuery && (
         <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap md:flex-wrap">
           {['#1', 'Mesa 1', 'domicilio', 'desmechada', 'asada'].map((hint) => (
@@ -488,28 +473,20 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Filtros estado */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 flex-nowrap md:flex-wrap">
         {['', 'PENDING', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'].map((s) => (
           <button key={s || 'all'} onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              statusFilter === s
-                ? 'bg-orange-500 text-white'
-                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-            }`}>
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${statusFilter === s ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}>
             {s ? STATUS_LABELS[s].label : 'Todos'}
           </button>
         ))}
       </div>
 
-      {/* Filtro fecha */}
       <div className="flex items-center gap-3 flex-wrap">
         <input type="date" className="input w-auto text-sm" value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)} />
         {dateFilter !== TODAY && (
-          <button onClick={() => setDateFilter(TODAY)} className="text-xs text-orange-400 hover:text-orange-600">
-            Hoy
-          </button>
+          <button onClick={() => setDateFilter(TODAY)} className="text-xs text-orange-400 hover:text-orange-600">Hoy</button>
         )}
         <button onClick={() => setDateFilter('')}
           className={`text-xs transition-colors ${!dateFilter ? 'text-orange-400' : 'text-stone-400 hover:text-stone-600'}`}>
@@ -517,21 +494,24 @@ export default function OrdersPage() {
         </button>
       </div>
 
-      {/* Lista pedidos */}
+      {/* Lista */}
       {loading ? (
         <p className="text-stone-400 animate-pulse text-sm py-8 text-center">Cargando pedidos...</p>
       ) : (
         <div className="space-y-3">
           {filteredOrders.map((order) => {
-            const canAdvance = !!NEXT_STATUS[order.status];
-            const canCancel  = ['PENDING', 'PREPARING'].includes(order.status);
-            const canEdit    = ['PENDING', 'PREPARING', 'READY'].includes(order.status);
+            const canAdvance  = !!NEXT_STATUS[order.status];
+            const canCancel   = ['PENDING', 'PREPARING'].includes(order.status);
+            const canEdit     = ['PENDING', 'PREPARING', 'READY'].includes(order.status);
+            const delivery    = isDeliveryOrder(order);
+            const isPaid      = !!order.paymentMethod;
+            const isActive    = !['DELIVERED','CANCELLED'].includes(order.status);
 
             return (
               <div key={order.id}
                 className={`card p-4 transition-all slide-in ${
                   order.status === 'CANCELLED' ? 'opacity-50' :
-                  order.orderType === 'DOMICILIO' && order.status !== 'DELIVERED' ? 'border-orange-300' : ''
+                  delivery && isActive ? 'border-orange-300' : ''
                 }`}>
 
                 {/* Header */}
@@ -540,9 +520,7 @@ export default function OrdersPage() {
                     <span className="text-stone-800 font-semibold text-sm">
                       Pedido #<Highlight text={String(order.id)} query={q.replace('#', '')} />
                     </span>
-                    <span className={STATUS_LABELS[order.status].cls}>
-                      {STATUS_LABELS[order.status].label}
-                    </span>
+                    <span className={STATUS_LABELS[order.status].cls}>{STATUS_LABELS[order.status].label}</span>
                     <TypeBadge type={order.orderType} />
                     {(order as any).onlineStatus && ONLINE_STATUS[(order as any).onlineStatus] && (
                       <span className={ONLINE_STATUS[(order as any).onlineStatus].cls}>
@@ -561,7 +539,7 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Info domicilio */}
-                {order.orderType === 'DOMICILIO' && order.delivery && (
+                {delivery && order.delivery && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-2 text-xs space-y-0.5">
                     {order.delivery.customerName && (
                       <p className="font-semibold text-orange-600">
@@ -571,7 +549,6 @@ export default function OrdersPage() {
                     {order.delivery.phone && <p className="text-stone-500">📞 {order.delivery.phone}</p>}
                     <p className="text-stone-500">📍 <Highlight text={order.delivery.address} query={q} /></p>
                     {order.delivery.neighborhood && <p className="text-stone-400">{order.delivery.neighborhood}</p>}
-                    
                   </div>
                 )}
 
@@ -585,18 +562,17 @@ export default function OrdersPage() {
                   ))}
                 </p>
 
-                {/* Notas */}
                 {order.notes && (
                   <p className="text-yellow-400/70 text-xs mt-0.5 mb-1">
                     💬 <Highlight text={order.notes} query={q} />
                   </p>
                 )}
 
-                {/* Meta */}
+                {/* Meta + estado de pago */}
                 <div className="flex items-center gap-3 text-xs text-stone-400 mb-3 flex-wrap">
                   <span>{new Date(order.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</span>
                   <span>👤 <span className="text-stone-500">{order.user.name}</span></span>
-                  {order.paymentMethod ? (
+                  {isPaid ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 font-medium text-xs">
                       {order.paymentMethod === 'EFECTIVO' ? '💵' : order.paymentMethod === 'TRANSFERENCIA' ? '📲' : '💳'} Pagado
                     </span>
@@ -607,30 +583,49 @@ export default function OrdersPage() {
                   ) : null}
                 </div>
 
-                {/* Acciones */}
+                {/* ── Acciones ── */}
                 <div className="flex gap-2 flex-wrap">
-                  {/* Botones aprobar/rechazar para pedidos online */}
+
+                  {/* Aprobar pedido online */}
                   {(order as any).onlineStatus === 'PENDING_APPROVAL' && (
-                    <button
-                      onClick={() => setApproveOrder(order)}
+                    <button onClick={() => setApproveOrder(order)}
                       className="flex-1 bg-violet-500 hover:bg-violet-400 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
                       🌐 Aprobar / Rechazar
                     </button>
                   )}
+
+                  {/* ── DOMICILIO: botón de pago SIEMPRE visible (cuando no está pagado) ── */}
+                  {delivery && !isPaid && isActive && (order as any).onlineStatus !== 'PENDING_APPROVAL' && (
+                    <button
+                      onClick={() => setPaymentOrder(order)}
+                      disabled={updating === order.id}
+                      className="flex-1 text-xs font-bold px-3 py-2 rounded-lg transition-colors bg-emerald-500 hover:bg-emerald-400 text-white disabled:opacity-50">
+                      💰 Registrar pago
+                    </button>
+                  )}
+
+                  {/* ── Avanzar estado ── */}
                   {canAdvance && (order as any).onlineStatus !== 'PENDING_APPROVAL' && (
                     <button
-                      onClick={() => advanceStatus(order.id, order.status)}
+                      onClick={() => advanceStatus(order.id, order.status, order.orderType)}
                       disabled={updating === order.id}
                       className={`flex-1 text-xs font-bold px-3 py-2 rounded-lg transition-colors disabled:opacity-50 ${
-                        NEXT_STATUS[order.status] === 'DELIVERED'
+                        // Para domicilios en READY: solo avanzar (sin pago)
+                        // Para locales en READY: cobrar y entregar (naranja)
+                        !delivery && NEXT_STATUS[order.status] === 'DELIVERED'
                           ? 'bg-orange-500 hover:bg-orange-400 text-white'
                           : 'bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800'
                       }`}>
                       {updating === order.id ? '...' :
-                       NEXT_STATUS[order.status] === 'DELIVERED' ? '💰 Cobrar y entregar' :
-                       `→ ${STATUS_LABELS[NEXT_STATUS[order.status]].label}`}
+                       // Domicilio: mostrar "En camino" / avance normal (pago ya se maneja aparte)
+                       delivery && NEXT_STATUS[order.status] === 'DELIVERED'
+                         ? '🛵 Marcar en camino'
+                       : !delivery && NEXT_STATUS[order.status] === 'DELIVERED'
+                         ? '💰 Cobrar y entregar'
+                       : `→ ${STATUS_LABELS[NEXT_STATUS[order.status]].label}`}
                     </button>
                   )}
+
                   {canEdit && (
                     <button onClick={() => setEditOrder(order)}
                       className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 text-xs font-medium px-3 py-2 rounded-lg transition-colors">
