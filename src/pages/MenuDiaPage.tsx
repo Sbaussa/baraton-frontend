@@ -391,14 +391,13 @@ ${sep}`;
             </div>
           </div>
 
-          {/* Lista de productos */}
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
               <div className="flex items-center gap-2">
                 <Utensils size={14} className="text-orange-500" />
                 <h2 className="text-sm font-bold text-stone-700">Platos del día</h2>
                 <span className="text-xs bg-orange-100 text-orange-600 font-semibold px-2 py-0.5 rounded-full">
-                  {activeCount} activos
+                  {activeCount}Activos  
                 </span>
               </div>
               <div className="flex gap-1">
