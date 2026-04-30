@@ -11,16 +11,16 @@ import {
 } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'Sopas':              <Soup size={13} />,
-  'Proteínas del Día':  <ChefHat size={13} />,
-  'Especiales del Día': <Sparkles size={13} />,
-  'Asados':             <Utensils size={13} />,
-  'Asados Especial':    <Utensils size={13} />,
-  'Adicionales':        <Plus size={13} />,
-  'Proteínas':          <ChefHat size={13} />,
-  'Principios':         <Wheat size={13} />,
-  'Bebidas':            <Coffee size={13} />,
-  'Postres':            <Cake size={13} />,
+  'Sopas':              <Soup size={16} />,
+  'Proteínas del Día':  <ChefHat size={16} />,
+  'Especiales del Día': <Sparkles size={16} />,
+  'Asados':             <Utensils size={16} />,
+  'Asados Especial':    <Utensils size={16} />,
+  'Adicionales':        <Plus size={16} />,
+  'Proteínas':          <ChefHat size={16} />,
+  'Principios':         <Wheat size={16} />,
+  'Bebidas':            <Coffee size={16} />,
+  'Postres':            <Cake size={16} />,
 };
 
 const CAT_ORDER = [
@@ -391,7 +391,7 @@ ${sep}`;
             </div>
           </div>
 
-          {/* Lista de productos — Grid en desktop, lista en mobile */}
+          {/* Lista de productos */}
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
               <div className="flex items-center gap-2">
@@ -465,52 +465,82 @@ ${sep}`;
               </div>
             )}
 
-            {/* ── DESKTOP: grid de columnas ── */}
+            {/* ── DESKTOP: EXACTAMENTE 2 COLUMNAS CON CSS PURO ── */}
             {!autoLoading && (
-              <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-0 divide-x divide-stone-100">
-                {categories.map((cat) => {
-                  const catProds    = products.filter((p) => p.categoryId === cat.id);
-                  const activeInCat = catProds.filter(p => availability[p.id]).length;
-                  return (
-                    <div key={cat.id} className="flex flex-col">
-                      {/* Header de categoría */}
-                      <div className="flex items-center justify-between px-3 py-2.5 bg-stone-50/80 border-b border-stone-100">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-stone-400 flex-shrink-0">{CATEGORY_ICONS[cat.name] || <Utensils size={13}/>}</span>
-                          <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider truncate">{cat.name}</span>
+              <div 
+                className="hidden lg:block p-5"
+              >
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '20px',
+                  }}
+                >
+                  {categories.map((cat) => {
+                    const catProds    = products.filter((p) => p.categoryId === cat.id);
+                    const activeInCat = catProds.filter(p => availability[p.id]).length;
+                    return (
+                      <div 
+                        key={cat.id} 
+                        className="flex flex-col bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                      >
+                        {/* Header de categoría */}
+                        <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-stone-50 to-white border-b border-stone-100">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500 flex-shrink-0">
+                              {CATEGORY_ICONS[cat.name] || <Utensils size={18}/>}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-stone-700">{cat.name}</p>
+                              <p className="text-[11px] text-stone-400">{activeInCat} de {catProds.length} activos</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0 ml-3">
+                            <button 
+                              onClick={() => selectAll(cat.id, true)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+                              title="Seleccionar todos"
+                            >
+                              <ToggleRight size={18} />
+                            </button>
+                            <button 
+                              onClick={() => selectAll(cat.id, false)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+                              title="Deseleccionar todos"
+                            >
+                              <ToggleLeft size={18} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <span className="text-[10px] text-stone-400">{activeInCat}/{catProds.length}</span>
-                          <button onClick={() => selectAll(cat.id, true)}
-                            className="text-[10px] text-emerald-600 hover:bg-emerald-50 px-1 py-0.5 rounded transition-colors font-medium leading-none">
-                            ✓
-                          </button>
-                          <button onClick={() => selectAll(cat.id, false)}
-                            className="text-[10px] text-red-400 hover:bg-red-50 px-1 py-0.5 rounded transition-colors font-medium leading-none">
-                            ✕
-                          </button>
+                        {/* Productos de la categoría */}
+                        <div className="flex-1 divide-y divide-stone-100">
+                          {catProds.map((p) => (
+                            <label 
+                              key={p.id}
+                              className={`flex items-center gap-4 px-5 py-3.5 cursor-pointer transition-all hover:bg-stone-50/80 ${
+                                !availability[p.id] ? 'opacity-40 bg-stone-50/30' : ''
+                              }`}
+                            >
+                              <input 
+                                type="checkbox" 
+                                className="accent-orange-500 w-[18px] h-[18px] rounded cursor-pointer flex-shrink-0"
+                                checked={!!availability[p.id]} 
+                                onChange={() => toggleProduct(p.id)} 
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] text-stone-700 leading-snug font-medium">{p.name}</p>
+                              </div>
+                              <span className="text-xs font-bold text-orange-500 bg-orange-50 px-2.5 py-1 rounded-lg flex-shrink-0">
+                                ${p.price.toLocaleString('es-CO')}
+                              </span>
+                            </label>
+                          ))}
                         </div>
                       </div>
-                      {/* Productos de la categoría */}
-                      <div className="flex-1">
-                        {catProds.map((p) => (
-                          <label key={p.id}
-                            className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors hover:bg-stone-50 border-b border-stone-50/80 last:border-0 ${
-                              !availability[p.id] ? 'opacity-40' : ''
-                            }`}
-                          >
-                            <input type="checkbox" className="accent-orange-500 w-3.5 h-3.5 flex-shrink-0 rounded"
-                              checked={!!availability[p.id]} onChange={() => toggleProduct(p.id)} />
-                            <span className="flex-1 text-xs text-stone-700 truncate">{p.name}</span>
-                            <span className="text-[10px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">
-                              ${p.price.toLocaleString('es-CO')}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

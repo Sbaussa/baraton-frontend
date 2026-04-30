@@ -126,8 +126,7 @@ export default function NewOrderPage() {
         className="w-full flex items-center justify-between px-4 py-3"
       >
         <div className="flex items-center gap-2">
-          {/* ── Selector de tipo ── */}
-          {/* Desktop: compacto con texto */}
+
           <div className="hidden sm:flex gap-1">
             {typeOptions.map((t) => (
               <button
