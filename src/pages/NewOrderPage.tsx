@@ -5,7 +5,7 @@ import type { Product, Category, CartItem, OrderType, DeliveryForm } from '../ty
 import {
   Search, X, ShoppingCart, UtensilsCrossed, Bike, Package,
   Minus, Plus, Trash2, MapPin, Phone, User, StickyNote,
-  CheckCircle, AlertCircle, Hash, Clock, Home,
+  CheckCircle, AlertCircle, Hash,
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
@@ -213,26 +213,7 @@ export default function NewOrderPage() {
                     value={delivery.address} onChange={(e) => setDelivery({ ...delivery, address: e.target.value })} />
                 </div>
               </Field>
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="Barrio" optional>
-                  <div className="relative">
-                    <Home size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input className={inputCls + ' pl-8'} placeholder="Barrio" value={delivery.neighborhood}
-                      onChange={(e) => setDelivery({ ...delivery, neighborhood: e.target.value })} />
-                  </div>
-                </Field>
-                <Field label="Tiempo (min)" optional>
-                  <div className="relative">
-                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input type="number" className={inputCls + ' pl-8'} placeholder="30" value={delivery.estimatedMin}
-                      onChange={(e) => setDelivery({ ...delivery, estimatedMin: Number(e.target.value) })} />
-                  </div>
-                </Field>
-              </div>
-              <Field label="Notas del domicilio" optional>
-                <input className={inputCls} placeholder="Instrucciones adicionales..."
-                  value={delivery.notes || ''} onChange={(e) => setDelivery({ ...delivery, notes: e.target.value })} />
-              </Field>
+
             </div>
           )}
 
