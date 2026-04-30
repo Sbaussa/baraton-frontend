@@ -13,10 +13,10 @@ const emptyDelivery: DeliveryForm = {
   customerName: '', phone: '', address: '', neighborhood: '', notes: '', estimatedMin: 30,
 };
 
-const typeOptions: { value: OrderType; label: string; icon: React.ReactNode }[] = [
-  { value: 'MESA',      label: 'Mesa',      icon: <UtensilsCrossed size={14} /> },
-  { value: 'DOMICILIO', label: 'Domicilio', icon: <Bike size={14} /> },
-  { value: 'LLEVAR',    label: 'Llevar',    icon: <Package size={14} /> },
+const typeOptions: { value: OrderType; label: string; icon: React.ReactNode; iconLg: React.ReactNode }[] = [
+  { value: 'MESA',      label: 'Mesa',      icon: <UtensilsCrossed size={14} />, iconLg: <UtensilsCrossed size={22} /> },
+  { value: 'DOMICILIO', label: 'Domicilio', icon: <Bike size={14} />,            iconLg: <Bike size={22} />            },
+  { value: 'LLEVAR',    label: 'Llevar',    icon: <Package size={14} />,         iconLg: <Package size={22} />         },
 ];
 
 const inputCls = "w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-700 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 focus:bg-white transition-all";
@@ -118,17 +118,17 @@ export default function NewOrderPage() {
     }
   };
 
-  // ── Formulario contextual (colapsable) ────────────────────────────────────
+  // ── Formulario contextual (colapsable) ─────────────────────────────────────
   const formSection = (
     <div className="border-b border-stone-100 flex-shrink-0 bg-white">
-      {/* Header colapsable */}
       <button
         onClick={() => setFormOpen(!formOpen)}
         className="w-full flex items-center justify-between px-4 py-3"
       >
-        <div className="flex items-center gap-3">
-          {/* Selector tipo inline */}
-          <div className="flex gap-1">
+        <div className="flex items-center gap-2">
+          {/* ── Selector de tipo ── */}
+          {/* Desktop: compacto con texto */}
+          <div className="hidden sm:flex gap-1">
             {typeOptions.map((t) => (
               <button
                 key={t.value}
@@ -140,15 +140,34 @@ export default function NewOrderPage() {
                 }`}
               >
                 {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
+                {t.label}
               </button>
             ))}
           </div>
+
+          {/* ── Móvil: botones grandes con icono prominente ── */}
+          <div className="flex sm:hidden gap-2">
+            {typeOptions.map((t) => (
+              <button
+                key={t.value}
+                onClick={(e) => { e.stopPropagation(); setOrderType(t.value); }}
+                className={`flex flex-col items-center justify-center gap-1 w-[72px] py-2.5 rounded-xl text-[11px] font-bold transition-all active:scale-95 ${
+                  orderType === t.value
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+                    : 'bg-stone-100 text-stone-500'
+                }`}
+              >
+                {t.iconLg}
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           {orderType === 'MESA' && tableNumber && (
-            <span className="text-xs text-stone-400">Mesa {tableNumber}</span>
+            <span className="text-xs text-stone-400 hidden sm:inline">Mesa {tableNumber}</span>
           )}
           {orderType === 'DOMICILIO' && delivery.address && (
-            <span className="text-xs text-stone-400 truncate max-w-[120px]">{delivery.address}</span>
+            <span className="text-xs text-stone-400 truncate max-w-[120px] hidden sm:inline">{delivery.address}</span>
           )}
         </div>
         {formOpen
@@ -157,7 +176,6 @@ export default function NewOrderPage() {
         }
       </button>
 
-      {/* Contenido colapsable */}
       {formOpen && (
         <div className="px-4 pb-4 space-y-3">
           {orderType === 'MESA' && (
@@ -231,7 +249,7 @@ export default function NewOrderPage() {
     </div>
   );
 
-  // ── Lista de items ────────────────────────────────────────────────────────
+  // ── Lista de items ─────────────────────────────────────────────────────────
   const itemsList = (
     <div className="flex-1 overflow-y-auto">
       {cart.length === 0 ? (
@@ -249,37 +267,24 @@ export default function NewOrderPage() {
       ) : (
         <div className="p-3 space-y-2">
           {cart.map((item, idx) => (
-            <div key={item.productId}
-              className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm"
-            >
-              {/* Fila principal */}
+            <div key={item.productId} className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm">
               <div className="flex items-center gap-3 px-3 py-3">
-                {/* Número */}
                 <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
                   {idx + 1}
                 </span>
-
-                {/* Nombre + precio unitario */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-stone-800 truncate">{item.product.name}</p>
                   <p className="text-xs text-stone-400">${item.product.price.toLocaleString('es-CO')} c/u</p>
                 </div>
-
-                {/* Total del item */}
                 <span className="text-sm font-bold text-orange-500 flex-shrink-0">
                   ${(item.product.price * item.quantity).toLocaleString('es-CO')}
                 </span>
-
-                {/* Eliminar */}
                 <button onClick={() => removeFromCart(item.productId)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors flex-shrink-0">
                   <Trash2 size={13} />
                 </button>
               </div>
-
-              {/* Fila controles */}
               <div className="flex items-center justify-between px-3 pb-3 gap-2">
-                {/* Cantidad */}
                 <div className="flex items-center bg-stone-50 border border-stone-200 rounded-xl overflow-hidden">
                   <button onClick={() => updateQty(item.productId, item.quantity - 1)}
                     className="w-9 h-9 flex items-center justify-center text-stone-500 hover:bg-stone-100 active:bg-stone-200 transition-colors">
@@ -291,8 +296,6 @@ export default function NewOrderPage() {
                     <Plus size={12} />
                   </button>
                 </div>
-
-                {/* Nota del item */}
                 <input
                   className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-600 placeholder-stone-300 focus:outline-none focus:ring-1 focus:ring-orange-300 focus:bg-white transition-all"
                   placeholder="Nota del ítem..."
@@ -307,7 +310,7 @@ export default function NewOrderPage() {
     </div>
   );
 
-  // ── Footer fijo ───────────────────────────────────────────────────────────
+  // ── Footer fijo ────────────────────────────────────────────────────────────
   const footer = (
     <div className="flex-shrink-0 bg-white border-t border-stone-100 px-4 py-3 space-y-3">
       {error && (
@@ -316,8 +319,6 @@ export default function NewOrderPage() {
           <p className="text-xs">{error}</p>
         </div>
       )}
-
-      {/* Resumen compacto */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center">
@@ -336,7 +337,6 @@ export default function NewOrderPage() {
           <p className="text-xl font-bold text-stone-800 leading-tight">${total.toLocaleString('es-CO')}</p>
         </div>
       </div>
-
       <button
         onClick={submit}
         disabled={loading || !cart.length}
@@ -355,10 +355,9 @@ export default function NewOrderPage() {
     </div>
   );
 
-  // ── Catálogo ──────────────────────────────────────────────────────────────
+  // ── Catálogo ───────────────────────────────────────────────────────────────
   const catalogPanel = (
     <div className="flex flex-col h-full overflow-hidden bg-white">
-      {/* Header */}
       <div className="px-4 py-3.5 border-b border-stone-100 flex-shrink-0 flex items-center justify-between">
         <div>
           <h1 className="font-bold text-stone-800 text-base tracking-tight">Nuevo pedido</h1>
@@ -377,7 +376,6 @@ export default function NewOrderPage() {
         )}
       </div>
 
-      {/* Búsqueda */}
       <div className="px-3 pt-3 pb-2 border-b border-stone-100 flex-shrink-0">
         <div className="relative">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
@@ -387,15 +385,13 @@ export default function NewOrderPage() {
             value={search} onChange={(e) => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
               <X size={13} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Categorías */}
       <div className="flex gap-2 px-3 py-2 border-b border-stone-100 overflow-x-auto flex-shrink-0 scrollbar-none">
         <button
           onClick={() => setActiveCategory(null)}
@@ -416,7 +412,6 @@ export default function NewOrderPage() {
         ))}
       </div>
 
-      {/* Grid */}
       <div className="flex-1 overflow-y-auto p-3">
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-stone-300 gap-2">
@@ -454,10 +449,9 @@ export default function NewOrderPage() {
     </div>
   );
 
-  // ── Vista carrito (móvil) ─────────────────────────────────────────────────
+  // ── Vista carrito (móvil) ──────────────────────────────────────────────────
   const cartView = (
     <div className="flex flex-col h-full overflow-hidden bg-stone-50">
-      {/* Header */}
       <div className="bg-white border-b border-stone-100 px-4 py-3.5 flex-shrink-0 flex items-center gap-3">
         <button
           onClick={() => setMobileStep('catalog')}
@@ -469,9 +463,8 @@ export default function NewOrderPage() {
           <h2 className="font-bold text-stone-800 text-sm">Tu pedido</h2>
           <p className="text-xs text-stone-400">{totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</p>
         </div>
-        {/* Badge tipo */}
         <span className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
-          orderType === 'MESA' ? 'bg-blue-50 text-blue-600' :
+          orderType === 'MESA'      ? 'bg-blue-50 text-blue-600'     :
           orderType === 'DOMICILIO' ? 'bg-emerald-50 text-emerald-600' :
           'bg-stone-100 text-stone-500'
         }`}>
@@ -480,13 +473,8 @@ export default function NewOrderPage() {
         </span>
       </div>
 
-      {/* Formulario colapsable */}
       {formSection}
-
-      {/* Items con scroll independiente */}
       {itemsList}
-
-      {/* Footer fijo */}
       {footer}
     </div>
   );
@@ -500,9 +488,7 @@ export default function NewOrderPage() {
         </div>
         <div className="w-[340px] flex flex-col overflow-hidden bg-stone-50">
           <div className="flex-shrink-0">{formSection}</div>
-          <div className="flex-1 overflow-hidden flex flex-col">
-            {itemsList}
-          </div>
+          <div className="flex-1 overflow-hidden flex flex-col">{itemsList}</div>
           {footer}
         </div>
       </div>
