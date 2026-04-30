@@ -7,6 +7,7 @@ import {
   Plus, X, ChefHat, Utensils, Soup, Wheat, Coffee,
   Cake, Sparkles, AlertTriangle,
   ToggleLeft, ToggleRight, Salad, PlusCircle, Smartphone,
+  CalendarCheck, RefreshCw,
 } from 'lucide-react';
 
 interface SpecialItem {
@@ -18,15 +19,39 @@ interface SpecialItem {
 const EMOJIS = ['🍗','🥩','🐟','🥗','🍛','🍲','🥘','🫕','🍝','🥪','🫔','🍖','🐄','🐷','🐔','🦈','🌽','🥔','🫘','🥦','🎉','⭐'];
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'Sopas':      <Soup size={13} />,
-  'Proteínas':  <ChefHat size={13} />,
-  'Principios': <Wheat size={13} />,
-  'Bebidas':    <Coffee size={13} />,
-  'Postres':    <Cake size={13} />,
-  'Extras':     <Check size={13} />,
+  'Sopas':              <Soup size={13} />,
+  'Proteínas del Día':  <ChefHat size={13} />,
+  'Especiales del Día': <Sparkles size={13} />,
+  'Asados':             <Utensils size={13} />,
+  'Asados Especial':    <Utensils size={13} />,
+  'Adicionales':        <Plus size={13} />,
+  'Proteínas':          <ChefHat size={13} />,
+  'Principios':         <Wheat size={13} />,
+  'Bebidas':            <Coffee size={13} />,
+  'Postres':            <Cake size={13} />,
 };
 
-const CAT_ORDER = ['Proteínas', 'Sopas', 'Principios', 'Bebidas', 'Postres', 'Extras'];
+const CAT_ORDER = [
+  'Sopas','Proteínas del Día','Proteínas',
+  'Especiales del Día','Asados','Asados Especial',
+  'Principios','Bebidas','Postres','Adicionales',
+];
+
+const DAY_NAMES  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DAY_COLORS: Record<number, string> = {
+  1: 'bg-blue-50   text-blue-700   border-blue-200',
+  2: 'bg-purple-50 text-purple-700 border-purple-200',
+  3: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  4: 'bg-orange-50 text-orange-700 border-orange-200',
+  5: 'bg-rose-50   text-rose-700   border-rose-200',
+};
+
+function getDayColombia(): number {
+  const now   = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60_000;
+  const colMs = utcMs - 5 * 60 * 60_000;
+  return new Date(colMs).getDay();
+}
 
 const inputCls = "w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all";
 
@@ -43,32 +68,58 @@ function SectionTitle({ icon, children, action }: { icon: React.ReactNode; child
 }
 
 export default function MenuDiaPage() {
-  const [products, setProducts]           = useState<Product[]>([]);
-  const [categories, setCategories]       = useState<Category[]>([]);
-  const [availability, setAvailability]   = useState<Record<number, boolean>>({});
-  const [specials, setSpecials]           = useState<SpecialItem[]>([{ name: '', price: '', emoji: '🎉' }]);
+  const [products, setProducts]             = useState<Product[]>([]);
+  const [categories, setCategories]         = useState<Category[]>([]);
+  const [availability, setAvailability]     = useState<Record<number, boolean>>({});
+  const [specials, setSpecials]             = useState<SpecialItem[]>([{ name: '', price: '', emoji: '🎉' }]);
   const [precioAlmuerzo, setPrecioAlmuerzo] = useState('15000');
-  const [extras, setExtras]               = useState('Arroz blando · Ensalada verde · Frijol · Tajadas');
-  const [adicionales, setAdicionales]     = useState('Porción de ensalada  $3.000\nPorción de arroz  $3.000\nPorción de patacón $4.000\nPorción de tajadas  $3.000\nPorción de papas  $7.000');
-  const [phones, setPhones]               = useState('3122035078.     3016771709.      6053049760');
-  const [generatedMsg, setGeneratedMsg]   = useState('');
-  const [saved, setSaved]                 = useState(false);
-  const [saving, setSaving]               = useState(false);
-  const [copied, setCopied]               = useState(false);
+  const [extras, setExtras]                 = useState('Arroz blanco · Ensalada verde · Frijol · Tajadas');
+  const [adicionales, setAdicionales]       = useState('Porción de ensalada  $3.000\nPorción de arroz  $3.000\nPorción de patacón $4.000\nPorción de tajadas  $3.000\nPorción de papas  $6.000');
+  const [phones, setPhones]                 = useState('3122035078 · 3016771709 · 6053049760');
+  const [generatedMsg, setGeneratedMsg]     = useState('');
+  const [saved, setSaved]                   = useState(false);
+  const [saving, setSaving]                 = useState(false);
+  const [copied, setCopied]                 = useState(false);
+  const [autoLoading, setAutoLoading]       = useState(false);
+  const [todayDay, setTodayDay]             = useState(getDayColombia());
+  const [autoMsg, setAutoMsg]               = useState('');
+
+  // ── Carga productos ───────────────────────────────────────────────────────
+  const loadProducts = async () => {
+    const prods = await productsApi.getAll();
+    setProducts(prods);
+    const cats: Category[] = [];
+    const seen = new Set<number>();
+    prods.forEach((p) => {
+      if (!seen.has(p.categoryId)) { seen.add(p.categoryId); cats.push(p.category); }
+    });
+    setCategories(cats);
+    const avail: Record<number, boolean> = {};
+    prods.forEach((p) => { avail[p.id] = p.available; });
+    setAvailability(avail);
+  };
+
+  // ── Auto-seleccionar hoy al cargar la página ─────────────────────────────
+  const autoSelectToday = async (silent = false) => {
+    setAutoLoading(true);
+    try {
+      const { data } = await api.post('/menu/auto-select-today');
+      setTodayDay(data.day);
+      setAutoMsg(data.message);
+      await loadProducts();             // recargar con los nuevos available
+      if (!silent) setSaved(true);
+    } catch (err) {
+      console.error('Error auto-seleccionando:', err);
+      // Si falla el endpoint, cargar igual los productos
+      await loadProducts();
+    } finally {
+      setAutoLoading(false);
+    }
+  };
 
   useEffect(() => {
-    productsApi.getAll().then((prods) => {
-      setProducts(prods);
-      const cats: Category[] = [];
-      const seen = new Set<number>();
-      prods.forEach((p) => {
-        if (!seen.has(p.categoryId)) { seen.add(p.categoryId); cats.push(p.category); }
-      });
-      setCategories(cats);
-      const avail: Record<number, boolean> = {};
-      prods.forEach((p) => { avail[p.id] = p.available; });
-      setAvailability(avail);
-    });
+    // Al entrar al módulo, auto-seleccionar el menú del día automáticamente
+    autoSelectToday(true);
   }, []);
 
   const resetMsg = () => setGeneratedMsg('');
@@ -106,21 +157,22 @@ export default function MenuDiaPage() {
 
   const getProductEmoji = (name: string): string => {
     const n = name.toLowerCase();
-    if (/pollo|pechuga|gallina|pato|codorniz/.test(n))            return '🐔';
-    if (/carne|bistec|bisteck|res|lomo|falda|sobrebarriga/.test(n)) return '🥩';
-    if (/cerdo|chuleta|costilla|chicharr|lech[ón]|pernil/.test(n)) return '🐷';
-    if (/pescado|tilapia|bagre|mojarra|atun|salmon|trucha/.test(n)) return '🐟';
-    if (/camaron|mariscos|langosta/.test(n))                       return '🦐';
-    if (/higado|mondongo|tripas|intestino/.test(n))                return '🍖';
+    if (/pollo|pechuga|gallina/.test(n))                          return '🐔';
+    if (/carne|bistec|bisteck|res|lomo|sobrebarriga/.test(n))     return '🥩';
+    if (/cerdo|chuleta|costilla|chicharr|pernil|fajita/.test(n))  return '🐷';
+    if (/pescado|tilapia|mojarra|salmon/.test(n))                 return '🐟';
+    if (/higado|hígado/.test(n))                                  return '🍖';
     if (/desmechad|mechad/.test(n))                               return '🥩';
-    if (/sancocho|sopa|caldo|crema/.test(n))                      return '🍜';
+    if (/sancocho|sopa|caldo|mondongo/.test(n))                   return '🍜';
     if (/fajita|mixta/.test(n))                                   return '🌮';
     if (/arroz/.test(n))                                          return '🍚';
     if (/ensalada|verdura/.test(n))                               return '🥗';
-    if (/frijol|lenteja|garbanzo/.test(n))                        return '🌿';
+    if (/frijol|lenteja/.test(n))                                 return '🌿';
     if (/papa|patacon|yuca|platano|tajada/.test(n))               return '🌽';
-    if (/jugo|limonada|agua|gaseosa|bebida/.test(n))              return '🥤';
-    if (/postre|arroz con leche|dulce|flan/.test(n))              return '🍮';
+    if (/jugo|limonada|agua|gaseosa/.test(n))                     return '🥤';
+    if (/lengua/.test(n))                                         return '🐄';
+    if (/rabo/.test(n))                                           return '🥩';
+    if (/ajiaco|paticas|zaragoza/.test(n))                        return '🍲';
     return '🍽';
   };
 
@@ -153,11 +205,11 @@ export default function MenuDiaPage() {
       if (catName === 'Sopas') {
         msg += `${sep2}\n🍜 *SOPAS*\n`;
         prods.forEach((p) => {
-          const pr = p.price !== Number(precioAlmuerzo) ? ` *(+$${p.price.toLocaleString('es-CO')})*` : '';
+          const pr = p.price !== Number(precioAlmuerzo) ? ` *($${p.price.toLocaleString('es-CO')})*` : '';
           msg += `  • ${p.name}${pr}\n`;
         });
         msg += `\n`;
-      } else if (catName === 'Proteínas') {
+      } else if (catName === 'Proteínas del Día' || catName === 'Proteínas') {
         const normalPrice  = prods.filter(p => p.price === Number(precioAlmuerzo));
         const specialPrice = prods.filter(p => p.price !== Number(precioAlmuerzo));
         if (normalPrice.length) {
@@ -174,11 +226,28 @@ export default function MenuDiaPage() {
             msg += `\n`;
           });
         }
+      } else if (catName === 'Especiales del Día') {
+        const byPrice: Record<number, Product[]> = {};
+        prods.forEach(p => { if (!byPrice[p.price]) byPrice[p.price] = []; byPrice[p.price].push(p); });
+        Object.entries(byPrice).sort(([a],[b]) => Number(a)-Number(b)).forEach(([price, group]) => {
+          msg += `${sep2}\n✨ *ESPECIALES - $${Number(price).toLocaleString('es-CO')}*\n`;
+          group.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
+          msg += `\n`;
+        });
+      } else if (catName === 'Asados') {
+        msg += `${sep2}\n🔥 *ASADOS $${prods[0]?.price.toLocaleString('es-CO') || '17.000'}*\n`;
+        prods.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
+        msg += `\n`;
+      } else if (catName === 'Asados Especial') {
+        msg += `${sep2}\n⭐ *ASADOS ESPECIAL $${prods[0]?.price.toLocaleString('es-CO') || '20.000'}*\n`;
+        msg += `_(Con ensalada, papas fritas y jugo)_\n`;
+        prods.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name.replace(' Especial','')}\n`; });
+        msg += `\n`;
       } else if (catName === 'Bebidas') {
         msg += `${sep2}\n🥤 *BEBIDAS*\n`;
         prods.forEach((p) => { msg += `  • ${p.name}  $${p.price.toLocaleString('es-CO')}\n`; });
         msg += `\n`;
-      } else if (!['Principios'].includes(catName)) {
+      } else if (catName !== 'Principios' && catName !== 'Adicionales') {
         msg += `${sep2}\n🍽 *${catName.toUpperCase()}*\n`;
         prods.forEach((p) => {
           const pr = p.price !== Number(precioAlmuerzo) ? `  $${p.price.toLocaleString('es-CO')}` : '';
@@ -223,11 +292,12 @@ export default function MenuDiaPage() {
   };
 
   const activeCount = Object.values(availability).filter(Boolean).length;
+  const isWeekend   = todayDay === 0 || todayDay === 6;
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-6xl">
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-stone-800 tracking-tight">Menú del Día</h1>
@@ -246,12 +316,40 @@ export default function MenuDiaPage() {
         >
           {saving ? (
             <div className="w-4 h-4 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
-          ) : saved ? (
-            <CheckCheck size={16} />
-          ) : (
-            <Save size={16} />
-          )}
-          {saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar disponibilidad'}
+          ) : saved ? <CheckCheck size={16} /> : <Save size={16} />}
+          {saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar'}
+        </button>
+      </div>
+
+      {/* ── Banner día actual ── */}
+      <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border ${
+        isWeekend ? 'bg-stone-50 border-stone-200 text-stone-500' : (DAY_COLORS[todayDay] || 'bg-orange-50 border-orange-200 text-orange-700')
+      }`}>
+        <div className="flex items-center gap-2.5">
+          <CalendarCheck size={18} className="flex-shrink-0" />
+          <div>
+            {autoLoading ? (
+              <p className="text-sm font-semibold">Cargando menú del día...</p>
+            ) : (
+              <>
+                <p className="text-sm font-bold">
+                  {isWeekend
+                    ? `Hoy es ${DAY_NAMES[todayDay]} — sin menú del día`
+                    : `Hoy es ${DAY_NAMES[todayDay]} — menú cargado automáticamente`
+                  }
+                </p>
+                {autoMsg && <p className="text-xs opacity-75">{autoMsg}</p>}
+              </>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => autoSelectToday(false)}
+          disabled={autoLoading}
+          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white/60 hover:bg-white/90 rounded-xl border border-current/20 transition-all flex-shrink-0 disabled:opacity-50"
+        >
+          <RefreshCw size={12} className={autoLoading ? 'animate-spin' : ''} />
+          Recargar
         </button>
       </div>
 
@@ -301,68 +399,67 @@ export default function MenuDiaPage() {
                 </span>
               </div>
               <div className="flex gap-1">
-                <button
-                  onClick={() => selectGlobal(true)}
-                  className="flex items-center gap-1 text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded-lg transition-colors font-medium"
-                >
+                <button onClick={() => selectGlobal(true)}
+                  className="flex items-center gap-1 text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded-lg transition-colors font-medium">
                   <ToggleRight size={13} /> Todos
                 </button>
-                <button
-                  onClick={() => selectGlobal(false)}
-                  className="flex items-center gap-1 text-xs text-red-400 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
-                >
+                <button onClick={() => selectGlobal(false)}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium">
                   <ToggleLeft size={13} /> Ninguno
                 </button>
               </div>
             </div>
 
-            <div className="divide-y divide-stone-50">
-              {categories.map((cat) => {
-                const catProds = products.filter((p) => p.categoryId === cat.id);
-                const activeInCat = catProds.filter(p => availability[p.id]).length;
-                return (
-                  <div key={cat.id}>
-                    <div className="flex items-center justify-between px-4 py-2 bg-stone-50/80">
-                      <div className="flex items-center gap-2">
-                        <span className="text-stone-400">{CATEGORY_ICONS[cat.name] || <Utensils size={13} />}</span>
-                        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{cat.name}</span>
-                        <span className="text-xs text-stone-400">{activeInCat}/{catProds.length}</span>
+            {autoLoading ? (
+              <div className="flex items-center justify-center py-12 gap-3 text-stone-400">
+                <div className="w-5 h-5 border-2 border-orange-300 border-t-orange-500 rounded-full animate-spin"/>
+                <p className="text-sm">Cargando menú de {DAY_NAMES[todayDay]}...</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-stone-50">
+                {categories.map((cat) => {
+                  const catProds    = products.filter((p) => p.categoryId === cat.id);
+                  const activeInCat = catProds.filter(p => availability[p.id]).length;
+                  return (
+                    <div key={cat.id}>
+                      <div className="flex items-center justify-between px-4 py-2 bg-stone-50/80">
+                        <div className="flex items-center gap-2">
+                          <span className="text-stone-400">{CATEGORY_ICONS[cat.name] || <Utensils size={13}/>}</span>
+                          <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{cat.name}</span>
+                          <span className="text-xs text-stone-400">{activeInCat}/{catProds.length}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => selectAll(cat.id, true)}
+                            className="text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-lg transition-colors font-medium">
+                            Todos
+                          </button>
+                          <button onClick={() => selectAll(cat.id, false)}
+                            className="text-xs text-red-400 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors font-medium">
+                            Ninguno
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <button onClick={() => selectAll(cat.id, true)}
-                          className="text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-lg transition-colors font-medium">
-                          Todos
-                        </button>
-                        <button onClick={() => selectAll(cat.id, false)}
-                          className="text-xs text-red-400 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors font-medium">
-                          Ninguno
-                        </button>
+                      <div>
+                        {catProds.map((p) => (
+                          <label key={p.id}
+                            className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-stone-50 border-b border-stone-50/80 last:border-0 ${
+                              !availability[p.id] ? 'opacity-40' : ''
+                            }`}
+                          >
+                            <input type="checkbox" className="accent-orange-500 w-4 h-4 flex-shrink-0 rounded"
+                              checked={!!availability[p.id]} onChange={() => toggleProduct(p.id)} />
+                            <span className="flex-1 text-sm text-stone-700">{p.name}</span>
+                            <span className="text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-lg">
+                              ${p.price.toLocaleString('es-CO')}
+                            </span>
+                          </label>
+                        ))}
                       </div>
                     </div>
-                    <div>
-                      {catProds.map((p) => (
-                        <label key={p.id}
-                          className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-stone-50 border-b border-stone-50/80 last:border-0 ${
-                            !availability[p.id] ? 'opacity-40' : ''
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            className="accent-orange-500 w-4 h-4 flex-shrink-0 rounded"
-                            checked={!!availability[p.id]}
-                            onChange={() => toggleProduct(p.id)}
-                          />
-                          <span className="flex-1 text-sm text-stone-700">{p.name}</span>
-                          <span className="text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-lg">
-                            ${p.price.toLocaleString('es-CO')}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Especiales del día */}
@@ -370,24 +467,19 @@ export default function MenuDiaPage() {
             <SectionTitle
               icon={<Sparkles size={15} />}
               action={
-                <button
-                  onClick={addSpecial}
-                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-500 font-semibold transition-colors"
-                >
+                <button onClick={addSpecial}
+                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-500 font-semibold transition-colors">
                   <PlusCircle size={13} /> Agregar
                 </button>
               }
             >
-              Especiales del día
+              Especiales adicionales
             </SectionTitle>
             <div className="space-y-2">
               {specials.map((s, i) => (
                 <div key={i} className="flex gap-2 items-center">
-                  <select
-                    className="bg-stone-50 border border-stone-200 rounded-xl w-12 text-base px-1 py-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-300"
-                    value={s.emoji}
-                    onChange={(e) => updateSpecial(i, 'emoji', e.target.value)}
-                  >
+                  <select className="bg-stone-50 border border-stone-200 rounded-xl w-12 text-base px-1 py-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    value={s.emoji} onChange={(e) => updateSpecial(i, 'emoji', e.target.value)}>
                     {EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
                   </select>
                   <input className={inputCls + ' flex-1'} placeholder="Nombre del especial" value={s.name}
@@ -397,10 +489,7 @@ export default function MenuDiaPage() {
                     <input className={inputCls + ' pl-6'} placeholder="Precio" value={s.price}
                       onChange={(e) => updateSpecial(i, 'price', e.target.value)} />
                   </div>
-                  <button
-                    onClick={() => removeSpecial(i)}
-                    className="text-stone-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
-                  >
+                  <button onClick={() => removeSpecial(i)} className="text-stone-300 hover:text-red-400 transition-colors p-1 flex-shrink-0">
                     <X size={15} />
                   </button>
                 </div>
@@ -412,13 +501,17 @@ export default function MenuDiaPage() {
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 space-y-3">
             <SectionTitle icon={<Salad size={15} />}>Acompañamientos y adicionales</SectionTitle>
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-stone-500">Acompañamientos <span className="text-stone-400 font-normal">(separar con ·)</span></label>
+              <label className="text-xs font-semibold text-stone-500">
+                Acompañamientos <span className="text-stone-400 font-normal">(separar con ·)</span>
+              </label>
               <input className={inputCls} value={extras}
                 onChange={(e) => { setExtras(e.target.value); resetMsg(); }}
                 placeholder="Arroz · Ensalada · Frijol · Tajadas" />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-stone-500">Adicionales <span className="text-stone-400 font-normal">(uno por línea)</span></label>
+              <label className="text-xs font-semibold text-stone-500">
+                Adicionales <span className="text-stone-400 font-normal">(uno por línea)</span>
+              </label>
               <textarea className={inputCls + ' resize-none'} rows={5} value={adicionales}
                 onChange={(e) => { setAdicionales(e.target.value); resetMsg(); }}
                 placeholder={'Porción arroz $3.000\nPorción patacón $4.000'} />
@@ -443,7 +536,7 @@ export default function MenuDiaPage() {
             Generar mensaje para WhatsApp
           </button>
 
-          {activeCount === 0 && (
+          {activeCount === 0 && !autoLoading && (
             <div className="flex items-center justify-center gap-2 text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2.5">
               <AlertTriangle size={14} />
               <p className="text-xs font-medium">Selecciona al menos un plato para generar el mensaje</p>
@@ -455,17 +548,13 @@ export default function MenuDiaPage() {
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Check size={15} className="text-emerald-500" />
-                  <h3 className="text-sm font-bold text-stone-700">Mensaje listo para WhatsApp</h3>
+                  <h3 className="text-sm font-bold text-stone-700">Mensaje listo</h3>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={copyMessage}
+                  <button onClick={copyMessage}
                     className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
-                      copied
-                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-                        : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
-                    }`}
-                  >
+                      copied ? 'border-emerald-300 bg-emerald-50 text-emerald-600' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                    }`}>
                     {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
                     {copied ? 'Copiado' : 'Copiar'}
                   </button>
@@ -486,18 +575,16 @@ export default function MenuDiaPage() {
                   </button>
                 </div>
               </div>
-
               <textarea
                 className="w-full bg-stone-50 border border-stone-100 rounded-xl px-3 py-3 text-xs font-mono leading-relaxed text-stone-700 focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
                 rows={30}
                 value={generatedMsg}
                 onChange={(e) => setGeneratedMsg(e.target.value)}
               />
-
               {copied && (
                 <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-3 py-2.5 rounded-xl">
                   <CheckCheck size={14} className="flex-shrink-0" />
-                  <span><strong>Mensaje copiado.</strong> En WhatsApp, mantén presionado el cuadro de texto y toca <strong>Pegar</strong>.</span>
+                  <span><strong>Copiado.</strong> En WhatsApp mantén presionado el campo de texto y toca <strong>Pegar</strong>.</span>
                 </div>
               )}
             </div>
