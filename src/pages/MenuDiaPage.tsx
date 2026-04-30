@@ -6,17 +6,9 @@ import {
   Settings, Phone, Save, Check, Copy, CheckCheck,
   Plus, X, ChefHat, Utensils, Soup, Wheat, Coffee,
   Cake, Sparkles, AlertTriangle,
-  ToggleLeft, ToggleRight, Salad, PlusCircle, Smartphone,
+  ToggleLeft, ToggleRight, PlusCircle, Smartphone,
   CalendarCheck, RefreshCw,
 } from 'lucide-react';
-
-interface SpecialItem {
-  name: string;
-  price: string;
-  emoji: string;
-}
-
-const EMOJIS = ['🍗','🥩','🐟','🥗','🍛','🍲','🥘','🫕','🍝','🥪','🫔','🍖','🐄','🐷','🐔','🦈','🌽','🥔','🫘','🥦','🎉','⭐'];
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'Sopas':              <Soup size={13} />,
@@ -55,14 +47,13 @@ function getDayColombia(): number {
 
 const inputCls = "w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all";
 
-function SectionTitle({ icon, children, action }: { icon: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
+function SectionTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
         <span className="text-orange-500">{icon}</span>
         <h2 className="text-sm font-bold text-stone-700">{children}</h2>
       </div>
-      {action}
     </div>
   );
 }
@@ -71,10 +62,7 @@ export default function MenuDiaPage() {
   const [products, setProducts]             = useState<Product[]>([]);
   const [categories, setCategories]         = useState<Category[]>([]);
   const [availability, setAvailability]     = useState<Record<number, boolean>>({});
-  const [specials, setSpecials]             = useState<SpecialItem[]>([{ name: '', price: '', emoji: '🎉' }]);
   const [precioAlmuerzo, setPrecioAlmuerzo] = useState('15000');
-  const [extras, setExtras]                 = useState('Arroz blanco · Ensalada verde · Frijol · Tajadas');
-  const [adicionales, setAdicionales]       = useState('Porción de ensalada  $3.000\nPorción de arroz  $3.000\nPorción de patacón $4.000\nPorción de tajadas  $3.000\nPorción de papas  $6.000');
   const [phones, setPhones]                 = useState('3122035078 · 3016771709 · 6053049760');
   const [generatedMsg, setGeneratedMsg]     = useState('');
   const [saved, setSaved]                   = useState(false);
@@ -106,11 +94,10 @@ export default function MenuDiaPage() {
       const { data } = await api.post('/menu/auto-select-today');
       setTodayDay(data.day);
       setAutoMsg(data.message);
-      await loadProducts();             // recargar con los nuevos available
+      await loadProducts();
       if (!silent) setSaved(true);
     } catch (err) {
       console.error('Error auto-seleccionando:', err);
-      // Si falla el endpoint, cargar igual los productos
       await loadProducts();
     } finally {
       setAutoLoading(false);
@@ -118,7 +105,6 @@ export default function MenuDiaPage() {
   };
 
   useEffect(() => {
-    // Al entrar al módulo, auto-seleccionar el menú del día automáticamente
     autoSelectToday(true);
   }, []);
 
@@ -139,12 +125,6 @@ export default function MenuDiaPage() {
     const all: Record<number, boolean> = {};
     products.forEach((p) => { all[p.id] = val; });
     setAvailability(all); setSaved(false); resetMsg();
-  };
-
-  const addSpecial    = () => setSpecials((p) => [...p, { name: '', price: '', emoji: '🎉' }]);
-  const removeSpecial = (i: number) => { setSpecials((p) => p.filter((_, idx) => idx !== i)); resetMsg(); };
-  const updateSpecial = (i: number, field: keyof SpecialItem, val: string) => {
-    setSpecials((p) => p.map((s, idx) => idx === i ? { ...s, [field]: val } : s)); resetMsg();
   };
 
   const saveAvailability = async () => {
@@ -177,9 +157,8 @@ export default function MenuDiaPage() {
   };
 
   const generateMessage = () => {
-    const precio        = Number(precioAlmuerzo).toLocaleString('es-CO');
-    const activeProds   = products.filter((p) => availability[p.id]);
-    const validSpecials = specials.filter((s) => s.name.trim());
+    const precio      = Number(precioAlmuerzo).toLocaleString('es-CO');
+    const activeProds = products.filter((p) => availability[p.id]);
 
     const byCategory: Record<string, Product[]> = {};
     activeProds.forEach((p) => {
@@ -256,30 +235,6 @@ export default function MenuDiaPage() {
         msg += `\n`;
       }
     });
-
-    if (validSpecials.length) {
-      msg += `${sep2}\n🎉 *ESPECIAL DEL DIA* 🎉\n`;
-      validSpecials.forEach((s) => {
-        const pr = s.price ? `  *$${Number(s.price).toLocaleString('es-CO')}*` : '';
-        msg += `${s.emoji} ${s.name}${pr}\n`;
-      });
-      msg += `\n`;
-    }
-
-    if (extras.trim()) {
-      msg += `${sep2}\n🥗 *ACOMPAÑAMIENTOS*\n`;
-      extras.split('·').map(e => e.trim()).filter(Boolean).forEach(e => { msg += `  • ${e}\n`; });
-      msg += `\n`;
-    }
-
-    if (adicionales.trim()) {
-      msg += `${sep2}\n➕ *En Adicionales*\n`;
-      adicionales.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
-        const formatted = line.replace(/\$[\d.,]+/, (m) => `*${m}*`);
-        msg += `     • ${formatted}\n`;
-      });
-      msg += `\n`;
-    }
 
     msg += `${sep}\n🛵 *Servicio a domicilio disponible*\n💳 Pago contraentrega\n${sep}`;
     setGeneratedMsg(msg);
@@ -460,62 +415,6 @@ export default function MenuDiaPage() {
                 })}
               </div>
             )}
-          </div>
-
-          {/* Especiales del día */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
-            <SectionTitle
-              icon={<Sparkles size={15} />}
-              action={
-                <button onClick={addSpecial}
-                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-500 font-semibold transition-colors">
-                  <PlusCircle size={13} /> Agregar
-                </button>
-              }
-            >
-              Especiales adicionales
-            </SectionTitle>
-            <div className="space-y-2">
-              {specials.map((s, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <select className="bg-stone-50 border border-stone-200 rounded-xl w-12 text-base px-1 py-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-300"
-                    value={s.emoji} onChange={(e) => updateSpecial(i, 'emoji', e.target.value)}>
-                    {EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
-                  </select>
-                  <input className={inputCls + ' flex-1'} placeholder="Nombre del especial" value={s.name}
-                    onChange={(e) => updateSpecial(i, 'name', e.target.value)} />
-                  <div className="relative w-28 flex-shrink-0">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
-                    <input className={inputCls + ' pl-6'} placeholder="Precio" value={s.price}
-                      onChange={(e) => updateSpecial(i, 'price', e.target.value)} />
-                  </div>
-                  <button onClick={() => removeSpecial(i)} className="text-stone-300 hover:text-red-400 transition-colors p-1 flex-shrink-0">
-                    <X size={15} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Acompañamientos y adicionales */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 space-y-3">
-            <SectionTitle icon={<Salad size={15} />}>Acompañamientos y adicionales</SectionTitle>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-stone-500">
-                Acompañamientos <span className="text-stone-400 font-normal">(separar con ·)</span>
-              </label>
-              <input className={inputCls} value={extras}
-                onChange={(e) => { setExtras(e.target.value); resetMsg(); }}
-                placeholder="Arroz · Ensalada · Frijol · Tajadas" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-stone-500">
-                Adicionales <span className="text-stone-400 font-normal">(uno por línea)</span>
-              </label>
-              <textarea className={inputCls + ' resize-none'} rows={5} value={adicionales}
-                onChange={(e) => { setAdicionales(e.target.value); resetMsg(); }}
-                placeholder={'Porción arroz $3.000\nPorción patacón $4.000'} />
-            </div>
           </div>
         </div>
 
