@@ -1,15 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { reportsApi } from '../api';
 import { useSocket } from '../hooks/useSocket';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import {
   DollarSign, ShoppingBag, Target, Clock, XCircle,
-  Star, Tag, CreditCard, TrendingUp, TrendingDown,
-  Plus, RefreshCw, Package, Users, Zap, Award,
+  Star, Tag, CreditCard, TrendingUp,
+  RefreshCw, Package, Zap, Award,
   ArrowUpRight, ArrowDownRight, Minus,
 } from 'lucide-react';
 
@@ -42,7 +41,7 @@ interface StatCardProps {
   label: string;
   value: string | number;
   sub?: string;
-  trend?: number; // positive = up, negative = down
+  trend?: number;
   iconBg?: string;
   iconColor?: string;
   valueColor?: string;
@@ -54,24 +53,24 @@ function StatCard({ icon, label, value, sub, trend, iconBg = 'bg-orange-50', ico
   const TrendIcon = trendUp ? ArrowUpRight : trendDown ? ArrowDownRight : Minus;
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 flex flex-col gap-2 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
-        <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center ${iconColor} flex-shrink-0`}>
+        <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center ${iconColor} flex-shrink-0`}>
           {icon}
         </div>
         {trend !== undefined && (
-          <span className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${
+          <span className={`flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
             trendUp ? 'text-emerald-600 bg-emerald-50' : trendDown ? 'text-red-500 bg-red-50' : 'text-stone-400 bg-stone-50'
           }`}>
-            <TrendIcon size={11} />
+            <TrendIcon size={10} />
             {Math.abs(trend)}%
           </span>
         )}
       </div>
       <div>
-        <p className="text-xs text-stone-400 font-medium mb-0.5">{label}</p>
-        <p className={`text-2xl font-bold tracking-tight ${valueColor}`}>{value}</p>
-        {sub && <p className="text-xs text-stone-400 mt-0.5">{sub}</p>}
+        <p className="text-[11px] text-stone-400 font-medium mb-0.5">{label}</p>
+        <p className={`text-lg font-bold tracking-tight ${valueColor}`}>{value}</p>
+        {sub && <p className="text-[11px] text-stone-400 mt-0.5">{sub}</p>}
       </div>
     </div>
   );
@@ -81,7 +80,7 @@ function StatCard({ icon, label, value, sub, trend, iconBg = 'bg-orange-50', ico
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-stone-100 rounded-xl px-3 py-2.5 text-xs shadow-xl">
+    <div className="bg-white border border-stone-100 rounded-xl px-3 py-2 text-xs shadow-xl">
       <p className="text-stone-400 font-medium mb-1">{label}:00 hrs</p>
       <p className="text-orange-600 font-bold text-sm">${(payload[0]?.value || 0).toLocaleString('es-CO')}</p>
       <p className="text-stone-400 mt-0.5">{payload[1]?.value ?? 0} pedidos</p>
@@ -91,12 +90,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // ── Section Title ─────────────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-4">{children}</h3>;
+  return <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">{children}</h3>;
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const navigate  = useNavigate();
   const socket    = useSocket('cashier');
   const [mode, setMode] = useState('day');
   const [date, setDate] = useState(TODAY);
@@ -127,7 +125,14 @@ export default function DashboardPage() {
   useEffect(() => {
     socket.on('new-order', load);
     socket.on('order-status-changed', load);
-    return () => { socket.off('new-order', load); socket.off('order-status-changed', load); };
+    socket.on('order-paid', load);
+    socket.on('order-closed', load);
+    return () => { 
+      socket.off('new-order', load); 
+      socket.off('order-status-changed', load);
+      socket.off('order-paid', load);
+      socket.off('order-closed', load);
+    };
   }, [socket, load]);
 
   const paymentData = (stats?.paymentMethods || []).map((p: any, i: number) => ({
@@ -142,30 +147,28 @@ export default function DashboardPage() {
     ? [...paymentData].sort((a: any, b: any) => b.count - a.count)[0]
     : null;
 
-  // Order status breakdown
   const statusBreakdown = stats?.ordersByStatus || [];
 
-  // Conversion rate (delivered / total attempts)
   const totalAttempts = (stats?.totalOrders || 0) + (stats?.cancelledOrders || 0);
   const conversionRate = totalAttempts > 0
     ? Math.round((stats?.totalOrders / totalAttempts) * 100)
     : 0;
 
   return (
-    <div className="min-h-screen bg-stone-50 p-3 md:p-6 space-y-5">
+    <div className="min-h-screen bg-stone-50 p-2 sm:p-3 md:p-6 space-y-4">
 
       {/* ── Header ── */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-stone-800 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-stone-400 mt-0.5 flex items-center gap-1.5">
+          <h1 className="text-lg sm:text-xl font-bold text-stone-800 tracking-tight">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-stone-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
             {isToday
               ? new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
               : mode === 'day'
               ? new Date(date + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
               : `Del ${from} al ${to}`}
             {lastUpdated && (
-              <span className="text-xs text-stone-300 flex items-center gap-1">
+              <span className="text-[10px] sm:text-xs text-stone-300 flex items-center gap-1">
                 · <RefreshCw size={10} /> {lastUpdated.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
@@ -174,13 +177,6 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <button onClick={load} className="p-2 rounded-xl border border-stone-200 text-stone-400 hover:text-stone-700 hover:bg-white transition-colors">
             <RefreshCw size={16} />
-          </button>
-          <button
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition-colors"
-            onClick={() => navigate('/orders/new')}
-          >
-            <Plus size={16} />
-            Nuevo pedido
           </button>
         </div>
       </div>
@@ -206,7 +202,7 @@ export default function DashboardPage() {
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <input type="date" className="bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-orange-300" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
             <span className="text-stone-300 text-sm">→</span>
             <input type="date" className="bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-orange-300" value={to} min={from} max={TODAY} onChange={(e) => setTo(e.target.value)} />
@@ -222,29 +218,29 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* ── KPIs Principales ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             <StatCard
-              icon={<DollarSign size={18} />}
+              icon={<DollarSign size={16} />}
               label="Ingresos totales"
               value={`$${(stats?.totalRevenue || 0).toLocaleString('es-CO')}`}
               sub={`${stats?.totalOrders || 0} pedidos`}
               iconBg="bg-emerald-50" iconColor="text-emerald-500" valueColor="text-emerald-700"
             />
             <StatCard
-              icon={<ShoppingBag size={18} />}
+              icon={<ShoppingBag size={16} />}
               label="Pedidos entregados"
               value={stats?.totalOrders || 0}
               sub={`${conversionRate}% tasa de éxito`}
               iconBg="bg-orange-50" iconColor="text-orange-500"
             />
             <StatCard
-              icon={<Target size={18} />}
+              icon={<Target size={16} />}
               label="Ticket promedio"
               value={`$${Math.round(stats?.avgTicket || 0).toLocaleString('es-CO')}`}
               iconBg="bg-blue-50" iconColor="text-blue-500"
             />
             <StatCard
-              icon={<Clock size={18} />}
+              icon={<Clock size={16} />}
               label="Pendientes ahora"
               value={stats?.pendingOrders || 0}
               sub={stats?.pendingOrders > 0 ? 'Requieren atención' : 'Todo al día'}
@@ -253,29 +249,29 @@ export default function DashboardPage() {
           </div>
 
           {/* ── KPIs Secundarios ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             <StatCard
-              icon={<XCircle size={18} />}
+              icon={<XCircle size={16} />}
               label="Pedidos cancelados"
               value={stats?.cancelledOrders || 0}
               iconBg="bg-red-50" iconColor="text-red-400"
             />
             <StatCard
-              icon={<Award size={18} />}
+              icon={<Award size={16} />}
               label="Producto estrella"
               value={stats?.topProducts?.[0]?.name || '—'}
               sub={stats?.topProducts?.[0] ? `${stats.topProducts[0].totalSold} unidades` : undefined}
               iconBg="bg-purple-50" iconColor="text-purple-500"
             />
             <StatCard
-              icon={<Tag size={18} />}
+              icon={<Tag size={16} />}
               label="Categoría top"
               value={stats?.categoryRanking?.[0]?.name || '—'}
               sub={stats?.categoryRanking?.[0] ? `${stats.categoryRanking[0].total} uds` : undefined}
               iconBg="bg-cyan-50" iconColor="text-cyan-500"
             />
             <StatCard
-              icon={<CreditCard size={18} />}
+              icon={<CreditCard size={16} />}
               label="Pago más usado"
               value={topPayment?.name || '—'}
               sub={topPayment ? `${topPayment.count} transacciones` : undefined}
@@ -284,16 +280,16 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Extra KPIs Row ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
             {/* Conversión */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider">Tasa de conversión</p>
                 <Zap size={14} className="text-orange-400" />
               </div>
               <div className="flex items-end gap-2 mb-2">
-                <span className="text-3xl font-bold text-stone-800 tracking-tight">{conversionRate}%</span>
-                <span className="text-sm text-stone-400 mb-1">de pedidos entregados</span>
+                <span className="text-2xl sm:text-3xl font-bold text-stone-800 tracking-tight">{conversionRate}%</span>
+                <span className="text-xs sm:text-sm text-stone-400 mb-1">de pedidos entregados</span>
               </div>
               <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
                 <div
@@ -304,8 +300,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Estado de pedidos */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider">Estado de pedidos</p>
                 <Package size={14} className="text-stone-300" />
               </div>
@@ -333,8 +329,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Métodos de pago resumido */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider">Distribución de pagos</p>
                 <TrendingUp size={14} className="text-stone-300" />
               </div>
@@ -368,9 +364,9 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Gráficas ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
             {/* Ventas por hora */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 shadow-sm p-4 md:p-5">
+            <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4 md:p-5">
               <SectionTitle>Ventas por hora</SectionTitle>
               <ResponsiveContainer width="100%" height={210}>
                 <BarChart data={byHour} barGap={4}>
@@ -395,7 +391,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Métodos de pago — Donut */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 md:p-5">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4 md:p-5">
               <SectionTitle>Métodos de pago</SectionTitle>
               {paymentData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-stone-300">
@@ -435,9 +431,9 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Rankings + Últimos pedidos ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
             {/* Top productos */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 md:p-5">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4 md:p-5">
               <SectionTitle>Top productos</SectionTitle>
               <div className="space-y-3.5">
                 {stats?.topProducts?.length ? stats.topProducts.slice(0, 6).map((p: any, i: number) => (
@@ -466,7 +462,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Categorías */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 md:p-5">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4 md:p-5">
               <SectionTitle>Categorías más vendidas</SectionTitle>
               <div className="space-y-3.5">
                 {stats?.categoryRanking?.length ? stats.categoryRanking.slice(0, 6).map((cat: any, i: number) => (
@@ -495,7 +491,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Últimos pedidos */}
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 md:p-5">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 sm:p-4 md:p-5">
               <SectionTitle>Últimos pedidos</SectionTitle>
               <div className="space-y-3">
                 {stats?.recentOrders?.length ? stats.recentOrders.map((order: any) => (
