@@ -175,68 +175,116 @@ export default function MenuDiaPage() {
     const sep2 = '- - - - - - - - - - - - - - - - -';
 
     let msg = '';
-    msg += `${sep}\n*🍛 RESTAURANTE Y COMIDAS RAPIDAS*\n*EL NUEVO BARATON*\n*DOMICILIO Y PAGO CONTRAENTREGA* 🛵\n${sep}\n`;
-    msg += `📞 *TELEFONOS:*\n`;
-    phones.split(/[·,]/).map(p => p.trim()).filter(Boolean).forEach(p => { msg += `    ${p}\n`; });
-    msg += `${sep}\n\n👋 *Hola! Para hoy tenemos disponible*\n💰 *ALMUERZO DEL DIA: $${precio}*\n\n`;
+    msg += `${sep}
+*🍛 RESTAURANTE Y COMIDAS RAPIDAS*
+*EL NUEVO BARATON*
+*DOMICILIO Y PAGO CONTRAENTREGA* 🛵
+${sep}
+`;
+    msg += `📞 *TELEFONOS:*
+`;
+    phones.split(/[·,]/).map(p => p.trim()).filter(Boolean).forEach(p => { msg += `    ${p}
+`; });
+    msg += `${sep}
+
+👋 *Hola! Para hoy tenemos disponible*
+💰 *ALMUERZO DEL DIA: $${precio}*
+
+`;
 
     sortedEntries.forEach(([catName, prods]) => {
       if (catName === 'Sopas') {
-        msg += `${sep2}\n🍜 *SOPAS*\n`;
+        msg += `${sep2}
+🍜 *SOPAS*
+`;
         prods.forEach((p) => {
           const pr = p.price !== Number(precioAlmuerzo) ? ` *($${p.price.toLocaleString('es-CO')})*` : '';
-          msg += `  • ${p.name}${pr}\n`;
+          msg += `  • ${p.name}${pr}
+`;
         });
-        msg += `\n`;
+        msg += `
+`;
       } else if (catName === 'Proteínas del Día' || catName === 'Proteínas') {
         const normalPrice  = prods.filter(p => p.price === Number(precioAlmuerzo));
         const specialPrice = prods.filter(p => p.price !== Number(precioAlmuerzo));
         if (normalPrice.length) {
-          msg += `${sep2}\n🍽 *PROTEINAS - $${precio}*\n`;
-          normalPrice.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
-          msg += `\n`;
+          msg += `${sep2}
+🍽 *PROTEINAS - $${precio}*
+`;
+          normalPrice.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}
+`; });
+          msg += `
+`;
         }
         if (specialPrice.length) {
           const prices = [...new Set(specialPrice.map(p => p.price))].sort();
           prices.forEach(price => {
             const group = specialPrice.filter(p => p.price === price);
-            msg += `${sep2}\n✨ *ESPECIALES - $${price.toLocaleString('es-CO')}*\n`;
-            group.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
-            msg += `\n`;
+            msg += `${sep2}
+✨ *ESPECIALES - $${price.toLocaleString('es-CO')}*
+`;
+            group.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}
+`; });
+            msg += `
+`;
           });
         }
       } else if (catName === 'Especiales del Día') {
         const byPrice: Record<number, Product[]> = {};
         prods.forEach(p => { if (!byPrice[p.price]) byPrice[p.price] = []; byPrice[p.price].push(p); });
         Object.entries(byPrice).sort(([a],[b]) => Number(a)-Number(b)).forEach(([price, group]) => {
-          msg += `${sep2}\n✨ *ESPECIALES - $${Number(price).toLocaleString('es-CO')}*\n`;
-          group.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
-          msg += `\n`;
+          msg += `${sep2}
+✨ *ESPECIALES - $${Number(price).toLocaleString('es-CO')}*
+`;
+          group.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}
+`; });
+          msg += `
+`;
         });
       } else if (catName === 'Asados') {
-        msg += `${sep2}\n🔥 *ASADOS $${prods[0]?.price.toLocaleString('es-CO') || '17.000'}*\n`;
-        prods.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}\n`; });
-        msg += `\n`;
+        msg += `${sep2}
+🔥 *ASADOS $${prods[0]?.price.toLocaleString('es-CO') || '17.000'}*
+`;
+        prods.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name}
+`; });
+        msg += `
+`;
       } else if (catName === 'Asados Especial') {
-        msg += `${sep2}\n⭐ *ASADOS ESPECIAL $${prods[0]?.price.toLocaleString('es-CO') || '20.000'}*\n`;
-        msg += `_(Con ensalada, papas fritas y jugo)_\n`;
-        prods.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name.replace(' Especial','')}\n`; });
-        msg += `\n`;
+        msg += `${sep2}
+⭐ *ASADOS ESPECIAL $${prods[0]?.price.toLocaleString('es-CO') || '20.000'}*
+`;
+        msg += `_(Con ensalada, papas fritas y jugo)_
+`;
+        prods.forEach((p) => { msg += `${getProductEmoji(p.name)} ${p.name.replace(' Especial','')}
+`; });
+        msg += `
+`;
       } else if (catName === 'Bebidas') {
-        msg += `${sep2}\n🥤 *BEBIDAS*\n`;
-        prods.forEach((p) => { msg += `  • ${p.name}  $${p.price.toLocaleString('es-CO')}\n`; });
-        msg += `\n`;
+        msg += `${sep2}
+🥤 *BEBIDAS*
+`;
+        prods.forEach((p) => { msg += `  • ${p.name}  $${p.price.toLocaleString('es-CO')}
+`; });
+        msg += `
+`;
       } else if (catName !== 'Principios' && catName !== 'Adicionales') {
-        msg += `${sep2}\n🍽 *${catName.toUpperCase()}*\n`;
+        msg += `${sep2}
+🍽 *${catName.toUpperCase()}*
+`;
         prods.forEach((p) => {
           const pr = p.price !== Number(precioAlmuerzo) ? `  $${p.price.toLocaleString('es-CO')}` : '';
-          msg += `${getProductEmoji(p.name)} ${p.name}${pr}\n`;
+          msg += `${getProductEmoji(p.name)} ${p.name}${pr}
+`;
         });
-        msg += `\n`;
+        msg += `
+`;
       }
     });
 
-    msg += `${sep}\n🛵 *Servicio a domicilio disponible*\n💳 Pago contraentrega\n${sep}`;
+    msg += `${sep}
+🛵 *Servicio a domicilio disponible*
+💳 Pago contraentrega
+${sep}`;
     setGeneratedMsg(msg);
   };
 
@@ -250,7 +298,7 @@ export default function MenuDiaPage() {
   const isWeekend   = todayDay === 0 || todayDay === 6;
 
   return (
-    <div className="p-4 md:p-6 space-y-5 max-w-6xl">
+    <div className="p-4 md:p-6 space-y-5 max-w-[1600px]">
 
       {/* ── Header ── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -315,10 +363,10 @@ export default function MenuDiaPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         {/* ── Columna izquierda ── */}
-        <div className="space-y-4">
+        <div className="lg:col-span-8 space-y-4">
 
           {/* Configuración */}
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4">
@@ -343,7 +391,7 @@ export default function MenuDiaPage() {
             </div>
           </div>
 
-          {/* Lista de productos */}
+          {/* Lista de productos — Grid en desktop, lista en mobile */}
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
               <div className="flex items-center gap-2">
@@ -371,7 +419,8 @@ export default function MenuDiaPage() {
                 <p className="text-sm">Cargando menú de {DAY_NAMES[todayDay]}...</p>
               </div>
             ) : (
-              <div className="divide-y divide-stone-50">
+              /* ── MOBILE: lista vertical ── */
+              <div className="lg:hidden divide-y divide-stone-50">
                 {categories.map((cat) => {
                   const catProds    = products.filter((p) => p.categoryId === cat.id);
                   const activeInCat = catProds.filter(p => availability[p.id]).length;
@@ -415,11 +464,60 @@ export default function MenuDiaPage() {
                 })}
               </div>
             )}
+
+            {/* ── DESKTOP: grid de columnas ── */}
+            {!autoLoading && (
+              <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-0 divide-x divide-stone-100">
+                {categories.map((cat) => {
+                  const catProds    = products.filter((p) => p.categoryId === cat.id);
+                  const activeInCat = catProds.filter(p => availability[p.id]).length;
+                  return (
+                    <div key={cat.id} className="flex flex-col">
+                      {/* Header de categoría */}
+                      <div className="flex items-center justify-between px-3 py-2.5 bg-stone-50/80 border-b border-stone-100">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-stone-400 flex-shrink-0">{CATEGORY_ICONS[cat.name] || <Utensils size={13}/>}</span>
+                          <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider truncate">{cat.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className="text-[10px] text-stone-400">{activeInCat}/{catProds.length}</span>
+                          <button onClick={() => selectAll(cat.id, true)}
+                            className="text-[10px] text-emerald-600 hover:bg-emerald-50 px-1 py-0.5 rounded transition-colors font-medium leading-none">
+                            ✓
+                          </button>
+                          <button onClick={() => selectAll(cat.id, false)}
+                            className="text-[10px] text-red-400 hover:bg-red-50 px-1 py-0.5 rounded transition-colors font-medium leading-none">
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                      {/* Productos de la categoría */}
+                      <div className="flex-1">
+                        {catProds.map((p) => (
+                          <label key={p.id}
+                            className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors hover:bg-stone-50 border-b border-stone-50/80 last:border-0 ${
+                              !availability[p.id] ? 'opacity-40' : ''
+                            }`}
+                          >
+                            <input type="checkbox" className="accent-orange-500 w-3.5 h-3.5 flex-shrink-0 rounded"
+                              checked={!!availability[p.id]} onChange={() => toggleProduct(p.id)} />
+                            <span className="flex-1 text-xs text-stone-700 truncate">{p.name}</span>
+                            <span className="text-[10px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">
+                              ${p.price.toLocaleString('es-CO')}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
         {/* ── Columna derecha — Mensaje ── */}
-        <div className="space-y-4">
+        <div className="lg:col-span-4 space-y-4">
           <button
             className={`w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-bold transition-all ${
               activeCount > 0
