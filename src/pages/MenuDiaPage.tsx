@@ -231,22 +231,24 @@ export default function MenuDiaPage() {
           <div>
             {autoLoading ? <p className="text-sm font-semibold">Cargando menu del dia...</p> : (
               <>
-                <p className="text-sm font-bold">{isWeekend ? `Hoy es ${DAY_NAMES[todayDay]} — sin menu del dia` : `Hoy es ${DAY_NAMES[todayDay]} — menu cargado automaticamente`}</p>
-                {autoMsg && <p className="text-xs opacity-75">{autoMsg}</p>}
+              <>
+                <p className="text-sm font-bold">{isWeekend ? `Hoy es ${DAY_NAMES[todayDay]} — sin menu del dia` : `Hoy es ${DAY_NAMES[todayDay]} — menu cargado`}</p>
               </>
             )}
           </div>
         </div>
+        {/* Boton Recargar oculto temporalmente
         <button onClick={() => autoSelectToday(false)} disabled={autoLoading}
           className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white/60 hover:bg-white/90 rounded-xl border border-current/20 transition-all flex-shrink-0 disabled:opacity-50">
           <RefreshCw size={12} className={autoLoading ? 'animate-spin' : ''} /> Recargar
         </button>
+        */}
       </div>
 
       {saved && (
         <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-2.5 rounded-xl">
           <Check size={15} className="flex-shrink-0" />
-          <span><strong>Nuevo Pedido</strong> ya muestra solo los platos activos de hoy.</span>
+          <span><strong>Menu guardado.</strong> El sistema ya muestra solo los platos activos.</span>
         </div>
       )}
 
@@ -279,10 +281,12 @@ export default function MenuDiaPage() {
                 <h2 className="text-sm font-bold text-stone-700">Platos del dia</h2>
                 <span className="text-xs bg-orange-100 text-orange-600 font-semibold px-2 py-0.5 rounded-full">{activeCount} Activos</span>
               </div>
+              {/* Botones globales ocultos temporalmente para evitar desorden 
               <div className="flex gap-1">
                 <button onClick={() => selectGlobal(true)} className="flex items-center gap-1 text-xs text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded-lg transition-colors font-medium"><ToggleRight size={13} /> Todos</button>
                 <button onClick={() => selectGlobal(false)} className="flex items-center gap-1 text-xs text-red-400 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"><ToggleLeft size={13} /> Ninguno</button>
               </div>
+              */}
             </div>
 
             {autoLoading ? (
