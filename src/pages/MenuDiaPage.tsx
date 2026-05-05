@@ -229,11 +229,14 @@ export default function MenuDiaPage() {
         <div className="flex items-center gap-2.5">
           <CalendarCheck size={18} className="flex-shrink-0" />
           <div>
-            {autoLoading ? <p className="text-sm font-semibold">Cargando menu del dia...</p> : (
-              <>
-              <>
-                <p className="text-sm font-bold">{isWeekend ? `Hoy es ${DAY_NAMES[todayDay]} — sin menu del dia` : `Hoy es ${DAY_NAMES[todayDay]} — menu cargado`}</p>
-              </>
+            {autoLoading ? (
+              <p className="text-sm font-semibold">Cargando menu del dia...</p>
+            ) : (
+              <p className="text-sm font-bold">
+                {isWeekend 
+                  ? `Hoy es ${DAY_NAMES[todayDay]} — sin menu del dia` 
+                  : `Hoy es ${DAY_NAMES[todayDay]} — menu cargado`}
+              </p>
             )}
           </div>
         </div>
