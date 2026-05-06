@@ -4,15 +4,34 @@ import type { Product, Category } from '../types';
 import { Modal, Currency } from '../components/ui';
 import {
   Plus, Search, Pencil, Trash2, ChevronDown, ChevronUp,
-  CheckCircle, XCircle, UtensilsCrossed, Tag,
+  CheckCircle, XCircle, UtensilsCrossed, Tag, Calendar,
 } from 'lucide-react';
+
+const DAY_OPTIONS = [
+  { value: '',  label: 'Todos los días' },
+  { value: '1', label: 'Lunes' },
+  { value: '2', label: 'Martes' },
+  { value: '3', label: 'Miércoles' },
+  { value: '4', label: 'Jueves' },
+  { value: '5', label: 'Viernes' },
+  { value: '6', label: 'Sábado' },
+];
+
+const DAY_COLORS: Record<number, string> = {
+  1: 'bg-blue-100 text-blue-700',
+  2: 'bg-purple-100 text-purple-700',
+  3: 'bg-emerald-100 text-emerald-700',
+  4: 'bg-orange-100 text-orange-700',
+  5: 'bg-rose-100 text-rose-700',
+  6: 'bg-stone-100 text-stone-500',
+};
 
 export default function ProductsPage() {
   const [products, setProducts]     = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [modal, setModal]           = useState(false);
   const [editing, setEditing]       = useState<Product | null>(null);
-  const [form, setForm]             = useState({ name: '', price: '', categoryId: '', available: true });
+  const [form, setForm]             = useState({ name: '', price: '', categoryId: '', available: true, dayOfWeek: '' });
   const [search, setSearch]         = useState('');
   const [collapsed, setCollapsed]   = useState<Record<string, boolean>>({});
 
@@ -25,12 +44,12 @@ export default function ProductsPage() {
 
   const openNew  = () => {
     setEditing(null);
-    setForm({ name: '', price: '', categoryId: '', available: true });
+    setForm({ name: '', price: '', categoryId: '', available: true, dayOfWeek: '' });
     setModal(true);
   };
   const openEdit = (p: Product) => {
     setEditing(p);
-    setForm({ name: p.name, price: String(p.price), categoryId: String(p.categoryId), available: p.available });
+    setForm({ name: p.name, price: String(p.price), categoryId: String(p.categoryId), available: p.available, dayOfWeek: p.dayOfWeek != null ? String(p.dayOfWeek) : '' });
     setModal(true);
   };
 
@@ -41,6 +60,7 @@ export default function ProductsPage() {
       price:      Number(form.price),
       categoryId: Number(form.categoryId),
       available:  form.available,
+      dayOfWeek:  form.dayOfWeek !== '' ? Number(form.dayOfWeek) : null,
     };
     if (editing) await productsApi.update(editing.id, data);
     else         await productsApi.create(data);
@@ -167,9 +187,15 @@ export default function ProductsPage() {
                         <p className={`text-sm font-semibold leading-snug ${p.available ? 'text-stone-800' : 'text-stone-400'}`}>
                           {p.name}
                         </p>
-                        {!p.available && (
-                          <p className="text-xs text-stone-400 mt-0.5">No disponible hoy</p>
-                        )}
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {p.dayOfWeek != null
+                            ? <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${DAY_COLORS[p.dayOfWeek] || 'bg-stone-100 text-stone-500'}`}>
+                                {DAY_OPTIONS.find(d => d.value === String(p.dayOfWeek))?.label ?? `Día ${p.dayOfWeek}`}
+                              </span>
+                            : <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-400">Todos los días</span>
+                          }
+                          {!p.available && <span className="text-[10px] text-stone-400">· No disponible hoy</span>}
+                        </div>
                       </div>
 
                       {/* Precio */}
@@ -241,6 +267,28 @@ export default function ProductsPage() {
               <option value="">Seleccionar categoría...</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-500 mb-1.5">
+              <span className="flex items-center gap-1.5"><Calendar size={13} /> Día del menú</span>
+            </label>
+            <div className="grid grid-cols-4 gap-1.5">
+              {DAY_OPTIONS.map((d) => (
+                <button
+                  key={d.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, dayOfWeek: d.value })}
+                  className={`py-2 rounded-xl text-xs font-semibold border-2 transition-all ${
+                    form.dayOfWeek === d.value
+                      ? 'bg-orange-500 border-orange-500 text-white'
+                      : 'bg-stone-50 border-stone-200 text-stone-600 hover:border-orange-300'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Toggle disponibilidad */}

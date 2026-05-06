@@ -24,6 +24,7 @@ export interface Product {
   price: number;
   available: boolean;
   categoryId: number;
+  dayOfWeek?: number | null;
   category: Category;
 }
 
